@@ -11,6 +11,8 @@ package org.sonatype.m2e.webby.internal.launch;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -321,7 +323,21 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
   private void addJars(List<String> paths, String basePath) throws Exception {
     for(URL url : Collections.list((Enumeration<URL>) WebbyPlugin.getDefault().getBundle()
         .findEntries(basePath, "*.jar", true))) {
-      paths.add(new File(FileLocator.toFileURL(url).toURI()).getAbsolutePath());
+      url = FileLocator.toFileURL(url);
+      paths.add(toFile(url).getAbsolutePath());
+    }
+  }
+
+  private File toFile(URL url) {
+    try {
+      return new File(url.toURI());
+    } catch(URISyntaxException e) {
+      // seen even in Eclipse 3.7 that FileLocator returns URLs with spaces so try harder
+      try {
+        return new File(new URI("file", null, url.getPath(), null));
+      } catch(URISyntaxException e1) {
+        return new File(url.getPath());
+      }
     }
   }
 
