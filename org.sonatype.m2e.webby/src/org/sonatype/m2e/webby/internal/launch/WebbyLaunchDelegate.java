@@ -36,6 +36,7 @@ import org.codehaus.cargo.container.deployable.WAR;
 import org.codehaus.cargo.container.jetty.JettyPropertySet;
 import org.codehaus.cargo.container.property.GeneralPropertySet;
 import org.codehaus.cargo.container.property.ServletPropertySet;
+import org.codehaus.cargo.container.tomcat.TomcatPropertySet;
 import org.codehaus.cargo.generic.ContainerFactory;
 import org.codehaus.cargo.generic.DefaultContainerFactory;
 import org.codehaus.cargo.generic.configuration.ConfigurationFactory;
@@ -241,6 +242,11 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
       config.setProperty(ServletPropertySet.PORT, cargo.getPort());
       config.setProperty(JettyPropertySet.USE_FILE_MAPPED_BUFFER, "false");
 
+      String portAJP = getNextPort(cargo.getPort());
+      String portRMI = getNextPort(portAJP);
+      config.setProperty(TomcatPropertySet.AJP_PORT, portAJP);
+      config.setProperty(GeneralPropertySet.RMI_PORT, portRMI);
+
       DeployableFactory depFactory = new DefaultDeployableFactory();
       WAR dep = (WAR) depFactory.createDeployable(cargo.getContainerId(), cargo.getWarDirectory().getAbsolutePath(),
           DeployableType.WAR);
@@ -269,6 +275,12 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
     } catch(CargoException e) {
       throw WebbyPlugin.newError("Failed to start container", e);
     }
+  }
+
+  private static String getNextPort(String port) {
+    int portToInt = Integer.parseInt(port);
+    portToInt++;
+    return Integer.toString(portToInt);
   }
 
   private IWebApp launchEmbedded(CargoConfiguration cargo, ILaunchConfiguration configuration, String mode,
