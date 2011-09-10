@@ -151,7 +151,8 @@ public class WebbyTab extends JavaLaunchTab {
   }
 
   private void createContainerEditor(Composite parent) {
-    Set<String> supported = new HashSet<String>(Arrays.asList("jetty6x", "jetty7x", "tomcat5x", "tomcat6x", "tomcat7x"));
+    Set<String> supported = new HashSet<String>(Arrays.asList("jetty6x", "jetty7x", "jetty8x", "tomcat5x", "tomcat6x",
+        "tomcat7x"));
     containers = new TreeMap<String, SortedSet<String>>();
     for(Map.Entry<String, Set<ContainerType>> entry : new DefaultContainerFactory().getContainerIds().entrySet()) {
       if(!supported.contains(entry.getKey())) {
