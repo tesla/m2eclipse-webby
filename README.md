@@ -1,4 +1,4 @@
-Web Application Runner for Maven WAR Projects
+Web Application Runner for Maven WAR Projects powered by [Cargo](http://cargo.codehaus.org/).
 
 Wiki
 ====
