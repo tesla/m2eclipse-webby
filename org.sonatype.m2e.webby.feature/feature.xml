@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <!--
  ~ Copyright (c) 2011 Sonatype, Inc.
  ~ All rights reserved. This program and the accompanying materials
@@ -7,7 +6,6 @@
  ~ which accompanies this distribution, and is available at
  ~   http://www.eclipse.org/legal/epl-v10.html
 -->
-
 <feature
       id="org.sonatype.m2e.webby.feature"
       label="Web Application Runner"
@@ -33,7 +31,7 @@
 
    <requires>
       <import feature="org.eclipse.platform" version="3.4.0" match="greaterOrEqual"/>
-      <import feature="org.eclipse.m2e.feature"/>
+      <import feature="org.eclipse.m2e.feature" version="1.0.0" match="greaterOrEqual"/>
    </requires>
 
    <plugin
