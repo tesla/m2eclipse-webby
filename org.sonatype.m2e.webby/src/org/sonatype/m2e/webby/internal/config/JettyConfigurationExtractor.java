@@ -28,7 +28,7 @@ public class JettyConfigurationExtractor {
 
   private static final String JETTY_6_PLUGIN_AID = "maven-jetty-plugin";
 
-  private static final String JETTY_7_PLUGIN_AID = "jetty-maven-plugin";
+  private static final String JETTY_7_PLUS_PLUGIN_AID = "jetty-maven-plugin";
 
   public JettyConfiguration getConfiguration(IMavenProjectFacade mvnFacade, IProgressMonitor monitor)
       throws CoreException {
@@ -48,7 +48,12 @@ public class JettyConfigurationExtractor {
       if(JETTY_6_PLUGIN_AID.equals(jettyPlugin.getArtifactId())) {
         jettyConfig.setContainerId("jetty6x");
       } else {
-        jettyConfig.setContainerId("jetty7x");
+        String ver = jettyPlugin.getVersion();
+        if(ver != null && ver.startsWith("8.")) {
+          jettyConfig.setContainerId("jetty8x");
+        } else {
+          jettyConfig.setContainerId("jetty7x");
+        }
       }
 
       Xpp3Dom dom = getConfig(jettyPlugin);
@@ -112,7 +117,7 @@ public class JettyConfigurationExtractor {
     if(build == null) {
       return null;
     }
-    Plugin plugin = findPlugin(build, JETTY_PLUGIN_GID, JETTY_7_PLUGIN_AID);
+    Plugin plugin = findPlugin(build, JETTY_PLUGIN_GID, JETTY_7_PLUS_PLUGIN_AID);
     if(plugin != null) {
       return plugin;
     }
@@ -124,7 +129,7 @@ public class JettyConfigurationExtractor {
     if(pluginMngt == null) {
       return null;
     }
-    plugin = findPlugin(pluginMngt, JETTY_PLUGIN_GID, JETTY_7_PLUGIN_AID);
+    plugin = findPlugin(pluginMngt, JETTY_PLUGIN_GID, JETTY_7_PLUS_PLUGIN_AID);
     if(plugin != null) {
       return plugin;
     }
