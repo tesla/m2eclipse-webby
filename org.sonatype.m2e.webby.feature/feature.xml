@@ -25,29 +25,10 @@
       %license
    </license>
 
-   <url>
-      <update label="%updateSiteName" url="http://m2eclipse.sonatype.org/sites/m2e-webby/"/>
-   </url>
-
    <requires>
       <import feature="org.eclipse.platform" version="3.4.0" match="greaterOrEqual"/>
       <import feature="org.eclipse.m2e.feature" version="1.0.0" match="greaterOrEqual"/>
    </requires>
-
-   <includes
-         id="org.sonatype.m2e.webby.jetty6x.feature"
-         version="0.0.0"
-         optional="true"/>
-
-   <includes
-         id="org.sonatype.m2e.webby.jetty7x.feature"
-         version="0.0.0"
-         optional="true"/>
-
-   <includes
-         id="org.sonatype.m2e.webby.jetty8x.feature"
-         version="0.0.0"
-         optional="true"/>
 
    <plugin
          id="org.sonatype.m2e.webby"

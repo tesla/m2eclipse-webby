@@ -25,6 +25,10 @@
       %license
    </license>
 
+   <requires>
+      <import feature="org.sonatype.m2e.webby.feature"/>
+   </requires>
+
    <plugin
          id="org.sonatype.m2e.webby.jetty6x"
          download-size="0"
