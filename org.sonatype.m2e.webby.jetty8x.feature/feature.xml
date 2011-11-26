@@ -7,11 +7,11 @@
  ~   http://www.eclipse.org/legal/epl-v10.html
 -->
 <feature
-      id="org.sonatype.m2e.webby.feature"
+      id="org.sonatype.m2e.webby.jetty8x.feature"
       label="%featureName"
       version="0.2.0.qualifier"
       provider-name="%providerName"
-      plugin="org.sonatype.m2e.webby">
+      plugin="org.sonatype.m2e.webby.jetty8x">
 
    <description url="%descriptionURL">
       %description
@@ -25,32 +25,12 @@
       %license
    </license>
 
-   <url>
-      <update label="%updateSiteName" url="http://m2eclipse.sonatype.org/sites/m2e-webby/"/>
-   </url>
-
-   <requires>
-      <import feature="org.eclipse.platform" version="3.4.0" match="greaterOrEqual"/>
-      <import feature="org.eclipse.m2e.feature" version="1.0.0" match="greaterOrEqual"/>
-   </requires>
-
-   <includes
-         id="org.sonatype.m2e.webby.jetty6x.feature"
-         version="0.0.0"/>
-
-   <includes
-         id="org.sonatype.m2e.webby.jetty7x.feature"
-         version="0.0.0"/>
-
-   <includes
-         id="org.sonatype.m2e.webby.jetty8x.feature"
-         version="0.0.0"/>
-
    <plugin
-         id="org.sonatype.m2e.webby"
+         id="org.sonatype.m2e.webby.jetty8x"
          download-size="0"
          install-size="0"
          version="0.0.0"
+         fragment="true"
          unpack="false"/>
 
 </feature>
