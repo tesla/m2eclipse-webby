@@ -27,6 +27,7 @@
     <module>org.sonatype.m2e.webby</module>
     <module>org.sonatype.m2e.webby.jetty6x</module>
     <module>org.sonatype.m2e.webby.jetty7x</module>
+    <module>org.sonatype.m2e.webby.jetty8x</module>
     <module>org.sonatype.m2e.webby.feature</module>
   </modules>
   
