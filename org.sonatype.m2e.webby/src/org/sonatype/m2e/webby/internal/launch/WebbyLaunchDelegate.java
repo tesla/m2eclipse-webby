@@ -118,6 +118,7 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
       cargo.setContainerType(ContainerType.toType(configuration.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_TYPE,
           "embedded")));
       cargo.setContainerHome(configuration.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_HOME, ""));
+      cargo.setContainerHome(expandVariables(cargo.getContainerHome()));
       cargo.setConfigHome(new File(workDir, "container").getAbsolutePath());
       cargo.setConfigType(ConfigurationType.STANDALONE);
       cargo.setLogLevel(configuration.getAttribute(WebbyLaunchConstants.ATTR_LOG_LEVEL, "medium"));
@@ -171,7 +172,7 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
     args.append(getVMArguments(config));
 
     String sysPropFiles = config.getAttribute(WebbyLaunchConstants.ATTR_SYS_PROP_FILES, "");
-    sysPropFiles = VariablesPlugin.getDefault().getStringVariableManager().performStringSubstitution(sysPropFiles);
+    sysPropFiles = expandVariables(sysPropFiles);
 
     Properties sysProps = loadSystemProperties(sysPropFiles);
 
@@ -361,6 +362,10 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
       i++ ;
     }
     return classpath;
+  }
+
+  private String expandVariables(String str) throws CoreException {
+    return VariablesPlugin.getDefault().getStringVariableManager().performStringSubstitution(str);
   }
 
 }

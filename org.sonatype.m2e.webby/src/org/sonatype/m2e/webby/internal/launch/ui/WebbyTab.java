@@ -27,6 +27,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.internal.ui.SWTFactory;
+import org.eclipse.debug.ui.StringVariableSelectionDialog;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaModel;
 import org.eclipse.jdt.core.IJavaProject;
@@ -84,6 +85,8 @@ public class WebbyTab extends JavaLaunchTab {
   private Text containerHome;
 
   private Button containerHomeBrowse;
+
+  private Button containerHomeVariables;
 
   private Spinner containerPort;
 
@@ -178,13 +181,13 @@ public class WebbyTab extends JavaLaunchTab {
     group.setFont(font);
     group.setText("Container");
     group.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-    group.setLayout(new GridLayout(4, false));
+    group.setLayout(new GridLayout(5, false));
 
     new Label(group, SWT.LEFT).setText("Provider:");
 
     containerId = new Combo(group, SWT.VERTICAL | SWT.DROP_DOWN | SWT.BORDER | SWT.READ_ONLY);
     containerId.setFont(font);
-    containerId.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
+    containerId.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 4, 1));
     for(String id : containers.keySet()) {
       containerId.add(id);
     }
@@ -207,7 +210,7 @@ public class WebbyTab extends JavaLaunchTab {
       }
     });
 
-    SWTFactory.createHorizontalSpacer(group, 2);
+    SWTFactory.createHorizontalSpacer(group, 3);
 
     new Label(group, SWT.LEFT).setText("Home:");
 
@@ -218,6 +221,20 @@ public class WebbyTab extends JavaLaunchTab {
       public void modifyText(ModifyEvent e) {
         updateLaunchConfigurationDialog();
       }
+    });
+
+    containerHomeVariables = createPushButton(group, "Variables...", null);
+    containerHomeVariables.addSelectionListener(new SelectionAdapter() {
+
+      public void widgetSelected(SelectionEvent e) {
+        StringVariableSelectionDialog dialog = new StringVariableSelectionDialog(getShell());
+        dialog.open();
+        String variable = dialog.getVariableExpression();
+        if(variable != null) {
+          containerHome.insert(variable);
+        }
+      }
+
     });
 
     containerHomeBrowse = createPushButton(group, LauncherMessages.AbstractJavaMainTab_1, null);
@@ -247,7 +264,7 @@ public class WebbyTab extends JavaLaunchTab {
       }
     });
 
-    SWTFactory.createHorizontalSpacer(group, 2);
+    SWTFactory.createHorizontalSpacer(group, 3);
 
     new Label(group, SWT.LEFT).setText("Port:");
 
@@ -294,8 +311,10 @@ public class WebbyTab extends JavaLaunchTab {
 
   private void updateContainerHome() {
     String type = containerType.getText();
-    containerHome.setEnabled(ContainerType.INSTALLED.getType().equals(type));
-    containerHomeBrowse.setEnabled(ContainerType.INSTALLED.getType().equals(type));
+    boolean homeEnabled = ContainerType.INSTALLED.getType().equals(type);
+    containerHome.setEnabled(homeEnabled);
+    containerHomeBrowse.setEnabled(homeEnabled);
+    containerHomeVariables.setEnabled(homeEnabled);
   }
 
   private IJavaProject chooseJavaProject() {
