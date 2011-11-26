@@ -9,7 +9,7 @@
 <feature
       id="org.sonatype.m2e.webby.feature"
       label="Web Application Runner"
-      version="0.1.0.qualifier"
+      version="0.2.0.qualifier"
       provider-name="Sonatype, Inc."
       plugin="org.sonatype.m2e.webby">
 
