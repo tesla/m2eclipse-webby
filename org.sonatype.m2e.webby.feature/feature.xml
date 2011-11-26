@@ -36,15 +36,18 @@
 
    <includes
          id="org.sonatype.m2e.webby.jetty6x.feature"
-         version="0.0.0"/>
+         version="0.0.0"
+         optional="true"/>
 
    <includes
          id="org.sonatype.m2e.webby.jetty7x.feature"
-         version="0.0.0"/>
+         version="0.0.0"
+         optional="true"/>
 
    <includes
          id="org.sonatype.m2e.webby.jetty8x.feature"
-         version="0.0.0"/>
+         version="0.0.0"
+         optional="true"/>
 
    <plugin
          id="org.sonatype.m2e.webby"
