@@ -242,6 +242,7 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
       config.setProperty(GeneralPropertySet.JVMARGS, getVmArgs(configuration));
       config.setProperty(ServletPropertySet.PORT, cargo.getPort());
       config.setProperty(JettyPropertySet.USE_FILE_MAPPED_BUFFER, "false");
+      config.setProperty(TomcatPropertySet.COPY_WARS, "false");
 
       String portAJP = getNextPort(cargo.getPort());
       String portRMI = getNextPort(portAJP);
