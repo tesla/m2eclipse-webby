@@ -12,9 +12,9 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.sonatype.forge</groupId>
-    <artifactId>forge-parent</artifactId>
-    <version>10</version>
+    <groupId>io.tesla</groupId>
+    <artifactId>tesla</artifactId>
+    <version>4</version>
   </parent>
 
   <groupId>org.sonatype.m2e.webby</groupId>
@@ -23,7 +23,6 @@
   <packaging>pom</packaging>
 
   <modules>
-    <module>org.sonatype.m2e.webby.target-platform</module>
     <module>org.sonatype.m2e.webby</module>
     <module>org.sonatype.m2e.webby.feature</module>
     <module>org.sonatype.m2e.webby.jetty6x</module>
@@ -36,10 +35,33 @@
   </modules>
   
   <properties>
-    <tycho-version>0.14.0</tycho-version>
-    <target.platform>e36</target.platform>
-    <m2e.site-compressed>https://repository.sonatype.org/service/local/repositories/forge-sites/content-compressed/</m2e.site-compressed>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>  
+    <tycho-version>0.15.0</tycho-version>
+    <m2e.site-compressed>http://repository.tesla.io:8081/nexus/service/local/repositories/m2e.extras/content-compressed/</m2e.site-compressed>
   </properties>
+  
+  <repositories>
+    <repository>
+      <id>juno</id>
+      <url>http://download.eclipse.org/releases/juno</url>
+      <layout>p2</layout>
+    </repository>
+    <repository>
+      <id>orbit</id>
+      <url>http://download.eclipse.org/tools/orbit/downloads/drops/R20120526062928/repository/</url>
+      <layout>p2</layout>
+    </repository>
+    <repository>
+      <id>eclipse-commons</id>
+      <url>http://repository.sonatype.org/content/sites/forge-sites/eclipse-commons/1.1.7/N/1.1.7.201105091728</url>
+      <layout>p2</layout>
+    </repository>
+    <repository>                                                                                                                       
+      <id>m2e-tests</id>                                                                                                         
+      <url>https://repository.sonatype.org/content/sites/forge-sites/m2e/1.1.0/N/1.1.0.20120622-0806/</url>                   
+      <layout>p2</layout>                                                                                                              
+    </repository>      
+  </repositories>    
   
   <build>
     <sourceDirectory>src</sourceDirectory>
@@ -73,14 +95,6 @@
         <version>${tycho-version}</version>
         <configuration>
           <resolver>p2</resolver>
-          <target>
-            <artifact>
-              <groupId>org.sonatype.m2e.webby</groupId>
-              <artifactId>org.sonatype.m2e.webby.target-platform</artifactId>
-              <version>${project.version}</version>
-              <classifier>${target.platform}</classifier>
-            </artifact>
-          </target>
           <ignoreTychoRepositories>true</ignoreTychoRepositories>
         </configuration>
       </plugin>     
@@ -88,6 +102,31 @@
   </build>
 
   <profiles>
+    <profile>
+      <id>sun-jvm</id>
+      <activation>
+        <property>
+          <name>java.vendor.url</name>
+          <value>http://java.sun.com/</value>
+        </property>
+      </activation>
+      <properties>
+        <tycho.test.jvmArgs>-Xmx512m -XX:MaxPermSize=256m</tycho.test.jvmArgs>
+      </properties>
+    </profile>
+    <profile>
+      <id>osx</id>
+      <activation>
+        <property>
+          <name>java.vendor.url</name>
+          <value>http://www.apple.com/</value>
+        </property>
+      </activation>
+      <properties>
+        <tycho.test.jvmArgs>-Xmx512m -XX:MaxPermSize=256m -Dosgi.ws=cocoa -XstartOnFirstThread</tycho.test.jvmArgs>
+        <osgi.ws>cocoa</osgi.ws>
+      </properties>
+    </profile>
     <profile>
       <id>sign</id>
       <activation>
@@ -112,4 +151,5 @@
       </build>
     </profile>
   </profiles>
+
 </project>
