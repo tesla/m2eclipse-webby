@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
 Bundle-Vendor: %Bundle-Vendor
 Bundle-SymbolicName: org.sonatype.m2e.webby;singleton:=true
-Bundle-Version: 0.2.1.qualifier
+Bundle-Version: 0.2.2.qualifier
 Bundle-Activator: org.sonatype.m2e.webby.internal.WebbyPlugin
 Bundle-ActivationPolicy: lazy
 Require-Bundle: org.eclipse.ui,

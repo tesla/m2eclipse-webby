@@ -14,7 +14,7 @@
   <parent>
     <groupId>org.sonatype.m2e.webby</groupId>
     <artifactId>org.sonatype.m2e.webby.parent</artifactId>
-    <version>0.2.1-SNAPSHOT</version>
+    <version>0.2.2-SNAPSHOT</version>
   </parent>
 
   <artifactId>org.sonatype.m2e.webby.jetty7x</artifactId>
