@@ -134,8 +134,7 @@ public class EmbeddedServerBooter {
 
     LocalConfiguration localConfig = (LocalConfiguration) config;
     localConfig.addDeployable(dep);
-
-    String containerTimeoutProperty = System.getProperty('cargo.containers.timeout');
+    String containerTimeoutProperty = System.getProperty("cargo.containers.timeout");
     int containerTimeout = (containerTimeoutProperty != null) ? Integer.valueOf(containerTimeoutProperty) : 30 * 1000;
 
     LocalContainer localContainer = (LocalContainer) container;
