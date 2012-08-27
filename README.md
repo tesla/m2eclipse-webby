@@ -15,6 +15,10 @@ and follow its instructions.
 
 Update Site
 ===========
+Version 0.2.2 and newer:  
+http://repository.tesla.io:8081/nexus/content/sites/m2e.extras/m2eclipse-webby/(version)/N/(version).(timestamp)/
+
+Version 0.2.1 and older:  
 http://m2eclipse.sonatype.org/sites/m2e-webby/
 
 License
