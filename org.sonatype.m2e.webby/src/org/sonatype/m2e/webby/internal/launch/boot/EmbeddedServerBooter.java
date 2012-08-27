@@ -8,8 +8,11 @@
 
 package org.sonatype.m2e.webby.internal.launch.boot;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -51,6 +54,9 @@ public class EmbeddedServerBooter {
     String logLevel = args[6];
     String warFile = args[7];
     String extraClasspath = args[8];
+    if(extraClasspath.startsWith("@")) {
+      extraClasspath = readArgumentFile(new File(extraClasspath.substring(1)));
+    }
     String contextName = "";
     if(args.length >= 10) {
       contextName = args[9];
@@ -80,6 +86,24 @@ public class EmbeddedServerBooter {
       e.printStackTrace();
     }
     container.stop();
+  }
+
+  private static String readArgumentFile(File pathname) throws Exception {
+    StringBuilder buffer = new StringBuilder(1024 * 32);
+    InputStreamReader rdr = new InputStreamReader(new BufferedInputStream(new FileInputStream(pathname)), "UTF-8");
+    try {
+      for(char[] chars = new char[1024 * 4];;) {
+        int read = rdr.read(chars);
+        if(read < 0) {
+          break;
+        }
+        buffer.append(chars, 0, read);
+      }
+    } finally {
+      rdr.close();
+    }
+    pathname.delete();
+    return buffer.toString().trim();
   }
 
   private static LocalContainer run(String containerId, ContainerType containerType, String configHome,

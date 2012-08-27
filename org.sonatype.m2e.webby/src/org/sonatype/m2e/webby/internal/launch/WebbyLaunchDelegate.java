@@ -10,6 +10,7 @@ package org.sonatype.m2e.webby.internal.launch;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -287,10 +288,24 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
 
   private IWebApp launchEmbedded(CargoConfiguration cargo, ILaunchConfiguration configuration, String mode,
       ILaunch launch, IProgressMonitor monitor) throws CoreException {
-    StringBuilder buffer = new StringBuilder(1024);
-    buffer.append(".");
-    for(String path : cargo.getRuntimeClasspath()) {
-      buffer.append(File.pathSeparator).append(path);
+
+    File classpathFile;
+    try {
+      StringBuilder buffer = new StringBuilder(1024);
+      buffer.append(".");
+      for(String path : cargo.getRuntimeClasspath()) {
+        buffer.append(File.pathSeparator).append(path);
+      }
+
+      classpathFile = File.createTempFile("m2e-webby-", ".classpath");
+      FileOutputStream os = new FileOutputStream(classpathFile);
+      try {
+        os.write(buffer.toString().getBytes("UTF-8"));
+      } finally {
+        os.close();
+      }
+    } catch(IOException e) {
+      throw WebbyPlugin.newError("Failed to write WAR classpath to temp file", e);
     }
 
     int controlPort = SocketUtil.findFreePort();
@@ -304,7 +319,8 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
     config.setVMArguments(DebugPlugin.parseArguments(getVmArgs(configuration)));
     config.setProgramArguments(new String[] {Integer.toString(controlPort), cargo.getContainerId(),
         cargo.getContainerType().getType(), cargo.getConfigHome(), cargo.getConfigType().getType(), cargo.getPort(),
-        cargo.getLogLevel(), cargo.getWarDirectory().getAbsolutePath(), buffer.toString(), cargo.getContextName()});
+        cargo.getLogLevel(), cargo.getWarDirectory().getAbsolutePath(), "@" + classpathFile.getAbsolutePath(),
+        cargo.getContextName()});
 
     IVMRunner runner = getVMRunner(configuration, mode);
     runner.run(config, launch, monitor);
