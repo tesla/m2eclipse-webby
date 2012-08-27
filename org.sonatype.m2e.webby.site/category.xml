@@ -9,16 +9,16 @@
 -->
 
 <site>
-   <feature url="features/org.sonatype.m2e.webby.feature_0.2.1.qualifier.jar" id="org.sonatype.m2e.webby.feature" version="0.2.1.qualifier">
+   <feature url="features/org.sonatype.m2e.webby.feature_0.2.2.qualifier.jar" id="org.sonatype.m2e.webby.feature" version="0.2.2.qualifier">
       <category name="m2eclipse-webby"/>
    </feature>
-   <feature url="features/org.sonatype.m2e.webby.jetty6x.feature_0.2.1.qualifier.jar" id="org.sonatype.m2e.webby.jetty6x.feature" version="0.2.1.qualifier">
+   <feature url="features/org.sonatype.m2e.webby.jetty6x.feature_0.2.2.qualifier.jar" id="org.sonatype.m2e.webby.jetty6x.feature" version="0.2.2.qualifier">
       <category name="m2eclipse-webby-addons"/>
    </feature>
-   <feature url="features/org.sonatype.m2e.webby.jetty6x.feature_0.2.1.qualifier.jar" id="org.sonatype.m2e.webby.jetty7x.feature" version="0.2.1.qualifier">
+   <feature url="features/org.sonatype.m2e.webby.jetty6x.feature_0.2.2.qualifier.jar" id="org.sonatype.m2e.webby.jetty7x.feature" version="0.2.2.qualifier">
       <category name="m2eclipse-webby-addons"/>
    </feature>
-   <feature url="features/org.sonatype.m2e.webby.jetty8x.feature_0.2.1.qualifier.jar" id="org.sonatype.m2e.webby.jetty8x.feature" version="0.2.1.qualifier">
+   <feature url="features/org.sonatype.m2e.webby.jetty8x.feature_0.2.2.qualifier.jar" id="org.sonatype.m2e.webby.jetty8x.feature" version="0.2.2.qualifier">
       <category name="m2eclipse-webby-addons"/>
    </feature>
    <category-def name="m2eclipse-webby" label="Web Application Launcher for M2Eclipse"/>
