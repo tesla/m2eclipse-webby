@@ -28,6 +28,8 @@ public abstract class WebbyLaunchConstants {
 
   public static final String ATTR_CONTAINER_PORT = ATTR_PREFIX + "containerPort";
 
+  public static final String ATTR_CONTAINER_TIMEOUT = ATTR_PREFIX + "containerTimeout";
+
   public static final String ATTR_SYS_PROP_FILES = ATTR_PREFIX + "sysPropFiles";
 
 }

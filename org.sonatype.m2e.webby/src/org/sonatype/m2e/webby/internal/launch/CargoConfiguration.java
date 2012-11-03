@@ -36,6 +36,8 @@ class CargoConfiguration {
 
   private String port;
 
+  private long timeout;
+
   private File warDirectory;
 
   private String[] runtimeClasspath;
@@ -117,6 +119,14 @@ class CargoConfiguration {
     this.port = port;
   }
 
+  public long getTimeout() {
+    return timeout;
+  }
+
+  public void setTimeout(long timeout) {
+    this.timeout = timeout;
+  }
+  
   public File getWarDirectory() {
     return warDirectory;
   }
@@ -140,5 +150,4 @@ class CargoConfiguration {
   public void setProvidedClasspath(String[] providedClasspath) {
     this.providedClasspath = providedClasspath;
   }
-
 }
