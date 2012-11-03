@@ -90,6 +90,8 @@ public class WebbyTab extends JavaLaunchTab {
 
   private Spinner containerPort;
 
+  private Spinner containerTimeout;
+
   private SortedMap<String, SortedSet<String>> containers;
 
   @Override
@@ -288,6 +290,29 @@ public class WebbyTab extends JavaLaunchTab {
       }
     });
 
+    SWTFactory.createHorizontalSpacer(group, 3);
+
+    new Label(group, SWT.LEFT).setText("Timeout:");
+
+    containerTimeout = new Spinner(group, SWT.SINGLE | SWT.BORDER);
+    containerTimeout.setFont(font);
+    containerTimeout.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
+    containerTimeout.setMinimum(1);
+    containerTimeout.setMaximum(Integer.MAX_VALUE);
+    containerTimeout.setPageIncrement(10);
+    containerTimeout.addModifyListener(new ModifyListener() {
+      public void modifyText(ModifyEvent e) {
+        updateLaunchConfigurationDialog();
+      }
+    });
+    containerTimeout.addMouseWheelListener(new MouseWheelListener() {
+      public void mouseScrolled(MouseEvent e) {
+        int delta = (e.count + (e.count < 0 ? -2 : 2)) / 3;
+        int value = containerTimeout.getSelection() + delta;
+        containerTimeout.setSelection(value);
+      }
+    });
+
     return;
   }
 
@@ -441,6 +466,20 @@ public class WebbyTab extends JavaLaunchTab {
     }
     this.containerPort.setSelection(containerPort);
 
+    int containerTimeout = 60;
+    try {
+      containerTimeout = config.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_TIMEOUT, 60);
+    } catch(CoreException ce) {
+      try {
+      containerTimeout = Integer.parseInt(config.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_TIMEOUT, "60"));
+      } catch(CoreException nce) {
+        setErrorMessage(ce.getStatus().getMessage());
+      } catch(NumberFormatException e) {
+        // just stick to the default value
+      }
+    }
+    this.containerTimeout.setSelection(containerTimeout);
+    
     super.initializeFrom(config);
   }
 
@@ -463,6 +502,7 @@ public class WebbyTab extends JavaLaunchTab {
     config.setAttribute(WebbyLaunchConstants.ATTR_CONTAINER_HOME, containerHome.getText().trim());
     config.setAttribute(WebbyLaunchConstants.ATTR_LOG_LEVEL, containerLogging.getText().trim());
     config.setAttribute(WebbyLaunchConstants.ATTR_CONTAINER_PORT, containerPort.getSelection());
+    config.setAttribute(WebbyLaunchConstants.ATTR_CONTAINER_TIMEOUT, containerTimeout.getSelection());
 
     IProject project = null;
     if(projectName.length() > 0) {

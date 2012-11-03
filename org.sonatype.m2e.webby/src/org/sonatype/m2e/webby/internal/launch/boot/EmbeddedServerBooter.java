@@ -53,13 +53,14 @@ public class EmbeddedServerBooter {
     String port = args[5];
     String logLevel = args[6];
     String warFile = args[7];
-    String extraClasspath = args[8];
+    long containerTimeout = Long.valueOf(args[8]);
+    String extraClasspath = args[9];
     if(extraClasspath.startsWith("@")) {
       extraClasspath = readArgumentFile(new File(extraClasspath.substring(1)));
     }
     String contextName = "";
-    if(args.length >= 10) {
-      contextName = args[9];
+    if(args.length >= 11) {
+      contextName = args[10];
     }
 
     System.out.println("  " + containerId + ":" + port + " (" + containerType + ")");
@@ -74,7 +75,7 @@ public class EmbeddedServerBooter {
     }
 
     LocalContainer container = run(containerId, ContainerType.toType(containerType), configHome,
-        ConfigurationType.toType(configType), port, logLevel, warFile, extraClasspath, contextName);
+        ConfigurationType.toType(configType), port, logLevel, warFile, extraClasspath, contextName, containerTimeout);
 
     ServerSocket control = new ServerSocket(Integer.parseInt(controlPort), 1);
     Socket socket = control.accept();
@@ -108,7 +109,7 @@ public class EmbeddedServerBooter {
 
   private static LocalContainer run(String containerId, ContainerType containerType, String configHome,
       ConfigurationType configType, String port, String logLevel, String warFile, String extraClasspath,
-      String contextName) throws Exception {
+      String contextName, long containerTimeout) throws Exception {
     if(LoggingLevel.HIGH.equalsLevel(logLevel) && containerId.startsWith("jetty")) {
       System.setProperty("DEBUG", "true");
       System.setProperty("org.eclipse.jetty.util.log.DEBUG", "true");
@@ -134,8 +135,6 @@ public class EmbeddedServerBooter {
 
     LocalConfiguration localConfig = (LocalConfiguration) config;
     localConfig.addDeployable(dep);
-    String containerTimeoutProperty = System.getProperty("cargo.containers.timeout");
-    int containerTimeout = (containerTimeoutProperty != null) ? Integer.valueOf(containerTimeoutProperty) : 30 * 1000;
 
     LocalContainer localContainer = (LocalContainer) container;
     localContainer.setLogger(new CargoLogger());
