@@ -128,6 +128,7 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
       } catch(CoreException e) {
         cargo.setPort(configuration.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_PORT, "8080"));
       }
+      cargo.setTimeout(configuration.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_TIMEOUT, 60) * 1000);
 
       if(!cargo.getWarDirectory().exists()) {
         throw WebbyPlugin.newError("WAR base directory " + cargo.getWarDirectory()
@@ -271,7 +272,7 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
       localContainer.setLogger(logger);
       localContainer.setHome(cargo.getContainerHome());
       localContainer.setJvmLauncherFactory(jvmLauncherFactory);
-      localContainer.setTimeout(60 * 1000);
+      localContainer.setTimeout(cargo.getTimeout());
       localContainer.start();
 
       return new InstalledContainerWebApp(launch, cargo, localContainer);
@@ -319,7 +320,7 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
     config.setVMArguments(DebugPlugin.parseArguments(getVmArgs(configuration)));
     config.setProgramArguments(new String[] {Integer.toString(controlPort), cargo.getContainerId(),
         cargo.getContainerType().getType(), cargo.getConfigHome(), cargo.getConfigType().getType(), cargo.getPort(),
-        cargo.getLogLevel(), cargo.getWarDirectory().getAbsolutePath(), "@" + classpathFile.getAbsolutePath(),
+        cargo.getLogLevel(), cargo.getWarDirectory().getAbsolutePath(), Long.toString(cargo.getTimeout()), "@" + classpathFile.getAbsolutePath(),
         cargo.getContextName()});
 
     IVMRunner runner = getVMRunner(configuration, mode);
