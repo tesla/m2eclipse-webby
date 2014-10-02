@@ -30,7 +30,7 @@ and follow its instructions.
 
 You can find the latest build of Webby here:
 
-http://repository.takari.io:8081/nexus/content/sites/m2e.extras/m2eclipse-webby/(version)/N/(version).(timestamp)/
+http://repository.takari.io:8081/nexus/content/sites/m2e.extras/m2eclipse-webby/0.2.2/N/
 
 #License
 
