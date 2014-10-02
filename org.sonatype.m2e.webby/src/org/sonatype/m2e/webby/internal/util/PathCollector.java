@@ -39,6 +39,7 @@ public class PathCollector {
       scanner.setExcludes(new String[0]);
     }
     scanner.addDefaultExcludes();
+    scanner.setupMatchPatterns();
   }
 
   public String[] collectFiles(String basedir) {
@@ -136,6 +137,10 @@ public class PathCollector {
       return isIncluded(path) && !isExcluded(path);
     }
 
+    @Override
+    public void setupMatchPatterns() {
+    	super.setupMatchPatterns();
+    }
   }
 
 }
