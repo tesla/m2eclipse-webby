@@ -223,4 +223,16 @@ public class EclipseJvmLauncher implements JvmLauncher {
     return coll.toArray(new String[coll.size()]);
   }
 
+  /**
+   * From cargo 1.4.11, not implemented yet
+   */
+	public void kill() {
+  }
+
+	/**
+   * From cargo 1.4.11, not implemented yet
+   */
+	public void setSpawn(boolean arg0) {
+  }
+
 }
