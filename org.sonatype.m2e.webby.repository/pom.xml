@@ -17,7 +17,7 @@
     <version>0.2.2-SNAPSHOT</version>
   </parent>
 
-  <artifactId>org.sonatype.m2e.webby.site</artifactId>
-  <packaging>eclipse-feature</packaging>
+  <artifactId>org.sonatype.m2e.webby.repository</artifactId>
+  <packaging>eclipse-repository</packaging>
   
 </project>
