@@ -12,9 +12,9 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>io.tesla.tycho</groupId>
+    <groupId>io.takari.tycho</groupId>
     <artifactId>tycho-support</artifactId>
-    <version>0.0.12</version>
+    <version>0.15.0</version>
   </parent>
 
   <groupId>org.sonatype.m2e.webby</groupId>
@@ -45,11 +45,6 @@
       <url>http://repository.sonatype.org/content/sites/forge-sites/eclipse-commons/1.1.7/N/1.1.7.201105091728</url>
       <layout>p2</layout>
     </repository>
-    <repository>                                                                                                                       
-      <id>m2e-tests</id>                                                                                                         
-      <url>https://repository.sonatype.org/content/sites/forge-sites/m2e/1.1.0/N/1.1.0.20120622-0806/</url>                   
-      <layout>p2</layout>                                                                                                              
-    </repository>      
   </repositories>     
 
 </project>
