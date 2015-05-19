@@ -1,6 +1,6 @@
 # Webby: A Web Application Runner for Maven WAR Projects powered by [Cargo](http://cargo.codehaus.org/).
 
-To ease running and debugging of web applications created by the Maven WAR Plugin, a feature named "Web Application Launcher" (nickname "Webby") can be installed from the update site (http://repository.takari.io:8081/nexus/content/sites/m2e.extras/m2eclipse-webby/0.2.2/N/). Once installed, the feature provides a new launch configuration type to run or debug a Maven WAR project in a servlet container. The Run Jetty Run plugin for Eclipse served as inspiration for Webby.
+To ease running and debugging of web applications created by the Maven WAR Plugin, a feature named "Web Application Launcher" (nickname "Webby") can be installed from the update site (https://repository.takari.io/content/sites/m2e.extras/m2eclipse-webby/0.2.2/N/). Once installed, the feature provides a new launch configuration type to run or debug a Maven WAR project in a servlet container. The Run Jetty Run plugin for Eclipse served as inspiration for Webby.
 
 Warning: Webby cannot be installed side-by-side with the m2e-wtp extension. Trying to do so will render one or both of the extensions unusable.
 
@@ -30,7 +30,7 @@ and follow its instructions.
 
 You can find the latest build of Webby here:
 
-http://repository.takari.io:8081/nexus/content/sites/m2e.extras/m2eclipse-webby/0.2.2/N/
+https://repository.takari.io/content/sites/m2e.extras/m2eclipse-webby/0.2.2/N/
 
 #License
 
