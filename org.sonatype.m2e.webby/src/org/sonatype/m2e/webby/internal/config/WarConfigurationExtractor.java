@@ -198,8 +198,7 @@ public class WarConfigurationExtractor {
   private String resolve(String basedir, String path) {
     String result = path;
     if(path != null && basedir != null) {
-      path = path.replace('\\', File.separatorChar).replace('/', File.separatorChar);
-
+      path = path.replace('\\', '/');
       File file = new File(path);
       if(file.isAbsolute()) {
         // path was already absolute, just normalize file separator and we're done

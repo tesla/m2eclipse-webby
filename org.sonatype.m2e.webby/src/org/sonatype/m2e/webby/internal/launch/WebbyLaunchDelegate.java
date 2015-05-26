@@ -252,7 +252,7 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
       config.setProperty(GeneralPropertySet.RMI_PORT, portRMI);
 
       DeployableFactory depFactory = new DefaultDeployableFactory();
-      WAR dep = (WAR) depFactory.createDeployable(cargo.getContainerId(), cargo.getWarDirectory().getAbsolutePath(),
+      WAR dep = (WAR) depFactory.createDeployable(cargo.getContainerId(), cargo.getWarDirectory().getAbsolutePath().replace("\\", "/"),
           DeployableType.WAR);
       if(cargo.getContextName().length() > 0) {
         dep.setContext(cargo.getContextName());
@@ -320,8 +320,8 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
     config.setVMArguments(DebugPlugin.parseArguments(getVmArgs(configuration)));
     config.setProgramArguments(new String[] {Integer.toString(controlPort), cargo.getContainerId(),
         cargo.getContainerType().getType(), cargo.getConfigHome(), cargo.getConfigType().getType(), cargo.getPort(),
-        cargo.getLogLevel(), cargo.getWarDirectory().getAbsolutePath(), Long.toString(cargo.getTimeout()), "@" + classpathFile.getAbsolutePath(),
-        cargo.getContextName()});
+        cargo.getLogLevel(), cargo.getWarDirectory().getAbsolutePath().replace("\\", "/"), Long.toString(cargo.getTimeout()),
+        "@" + classpathFile.getAbsolutePath().replace("\\", "/"), cargo.getContextName()});
 
     IVMRunner runner = getVMRunner(configuration, mode);
     runner.run(config, launch, monitor);
@@ -376,7 +376,7 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
     String[] classpath = new String[files.size()];
     int i = 0;
     for(File file : files) {
-      classpath[i] = file.getAbsolutePath();
+      classpath[i] = file.getAbsolutePath().replace("\\", "/");
       i++ ;
     }
     return classpath;
