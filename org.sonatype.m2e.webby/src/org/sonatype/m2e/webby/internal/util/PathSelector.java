@@ -57,9 +57,8 @@ public class PathSelector {
     return normalized;
   }
 
-  private static String normalizePath(String path) {
-    String normalized = path.replace((File.separatorChar == '/') ? '\\' : '/', File.separatorChar);
-    return normalized;
+  public static String normalizePath(String path) {
+    return path.replace((File.separatorChar == '/') ? '\\' : '/', File.separatorChar);
   }
 
   public boolean isSelected(String pathname) {

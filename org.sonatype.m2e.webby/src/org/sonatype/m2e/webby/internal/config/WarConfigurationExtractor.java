@@ -31,6 +31,7 @@ import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.m2e.core.embedder.IMaven;
 import org.eclipse.m2e.core.project.IMavenProjectFacade;
 import org.sonatype.m2e.webby.internal.WebbyPlugin;
+import org.sonatype.m2e.webby.internal.util.PathSelector;
 
 
 
@@ -198,7 +199,7 @@ public class WarConfigurationExtractor {
   private String resolve(String basedir, String path) {
     String result = path;
     if(path != null && basedir != null) {
-      path = path.replace('\\', '/');
+      path = PathSelector.normalizePath(path);
       File file = new File(path);
       if(file.isAbsolute()) {
         // path was already absolute, just normalize file separator and we're done

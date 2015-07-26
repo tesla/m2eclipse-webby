@@ -73,6 +73,7 @@ import org.sonatype.m2e.webby.internal.launch.boot.EmbeddedServerBooter;
 import org.sonatype.m2e.webby.internal.launch.ui.CargoConsoleLogger;
 import org.sonatype.m2e.webby.internal.launch.ui.ConsoleManager;
 import org.sonatype.m2e.webby.internal.util.MavenUtils;
+import org.sonatype.m2e.webby.internal.util.PathSelector;
 
 
 
@@ -252,7 +253,7 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
       config.setProperty(GeneralPropertySet.RMI_PORT, portRMI);
 
       DeployableFactory depFactory = new DefaultDeployableFactory();
-      WAR dep = (WAR) depFactory.createDeployable(cargo.getContainerId(), cargo.getWarDirectory().getAbsolutePath().replace("\\", "/"),
+      WAR dep = (WAR) depFactory.createDeployable(cargo.getContainerId(),  PathSelector.normalizePath(cargo.getWarDirectory().getAbsolutePath()),
           DeployableType.WAR);
       if(cargo.getContextName().length() > 0) {
         dep.setContext(cargo.getContextName());
@@ -320,8 +321,8 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
     config.setVMArguments(DebugPlugin.parseArguments(getVmArgs(configuration)));
     config.setProgramArguments(new String[] {Integer.toString(controlPort), cargo.getContainerId(),
         cargo.getContainerType().getType(), cargo.getConfigHome(), cargo.getConfigType().getType(), cargo.getPort(),
-        cargo.getLogLevel(), cargo.getWarDirectory().getAbsolutePath().replace("\\", "/"), Long.toString(cargo.getTimeout()),
-        "@" + classpathFile.getAbsolutePath().replace("\\", "/"), cargo.getContextName()});
+        cargo.getLogLevel(), PathSelector.normalizePath(cargo.getWarDirectory().getAbsolutePath()), Long.toString(cargo.getTimeout()),
+        "@" + PathSelector.normalizePath(classpathFile.getAbsolutePath()), cargo.getContextName()});
 
     IVMRunner runner = getVMRunner(configuration, mode);
     runner.run(config, launch, monitor);
@@ -376,7 +377,7 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
     String[] classpath = new String[files.size()];
     int i = 0;
     for(File file : files) {
-      classpath[i] = file.getAbsolutePath().replace("\\", "/");
+      classpath[i] = PathSelector.normalizePath(file.getAbsolutePath());
       i++ ;
     }
     return classpath;
