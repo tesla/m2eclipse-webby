@@ -11,6 +11,7 @@ package org.sonatype.m2e.webby.internal.util;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
 
 import org.codehaus.plexus.util.SelectorUtils;
 
@@ -57,9 +58,8 @@ public class PathSelector {
     return normalized;
   }
 
-  private static String normalizePath(String path) {
-    String normalized = path.replace((File.separatorChar == '/') ? '\\' : '/', File.separatorChar);
-    return normalized;
+  public static String normalizePath(String path) {
+    return path.replaceAll("[\\/]", Matcher.quoteReplacement(File.separator));
   }
 
   public boolean isSelected(String pathname) {
