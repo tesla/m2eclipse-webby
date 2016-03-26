@@ -38,6 +38,7 @@ public class EclipseJvmLauncher implements JvmLauncher {
 
   private File workingDirectory;
 
+  /** format of each element : <i>name</i>=<i>value</i> */
   private List<String> envVariables;
 
   private List<String> jvmArguments = new ArrayList<String>();
@@ -232,7 +233,25 @@ public class EclipseJvmLauncher implements JvmLauncher {
 	/**
    * From cargo 1.4.11, not implemented yet
    */
-	public void setSpawn(boolean arg0) {
+  public void setSpawn(boolean spawn) {
+  }
+
+  public String getEnvironmentVariable(String name) {
+    for (String envVariable : envVariables) {
+      if (envVariable != null) {
+        String[] result = envVariable.split("=");
+        if (result != null && result[0] != null && result[0].equals(name)) {
+          return result[1];
+        }
+      }
+    }
+    return null;
+  }
+
+  public void setEnvironmentVariable(String name, String value) {
+    if (name != null && name.length() > 0) {
+      envVariables.add(name + "=" + value);
+    }
   }
 
 }
