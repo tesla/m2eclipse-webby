@@ -252,6 +252,11 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
       config.setProperty(TomcatPropertySet.AJP_PORT, portAJP);
       config.setProperty(GeneralPropertySet.RMI_PORT, portRMI);
 
+      String portAJP = getNextPort(cargo.getPort());
+      String portRMI = getNextPort(portAJP);
+      config.setProperty(TomcatPropertySet.AJP_PORT, portAJP);
+      config.setProperty(GeneralPropertySet.RMI_PORT, portRMI);
+
       DeployableFactory depFactory = new DefaultDeployableFactory();
       WAR dep = (WAR) depFactory.createDeployable(cargo.getContainerId(),  PathSelector.normalizePath(cargo.getWarDirectory().getAbsolutePath()),
           DeployableType.WAR);
