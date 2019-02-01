@@ -24,7 +24,7 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.m2e.maven.runtime;bundle-version="[1.0.0,2.0.0)",
  org.eclipse.m2e.jdt;bundle-version="[1.0.0,2.0.0)"
 Bundle-ClassPath: .,jars/maven-filtering-1.0.jar,
- jars/cargo/cargo-core-uberjar-1.6.10.jar,
+ jars/cargo/cargo-core-uberjar-1.7.2.jar,
  jars/cargo/ant-1.8.2.jar,
  jars/cargo/ant-launcher-1.8.2.jar,
  jars/cargo/commons-discovery-0.4.jar,
