@@ -45,6 +45,11 @@
       <url>http://repository.sonatype.org/content/sites/forge-sites/eclipse-commons/1.1.7/N/1.1.7.201105091728</url>
       <layout>p2</layout>
     </repository>
+    <repository>
+      <id>m2e-core</id>
+      <url>http://ifedorenko.github.com/m2e-extras/</url>
+      <layout>p2</layout>
+    </repository>
   </repositories>     
 
 </project>
