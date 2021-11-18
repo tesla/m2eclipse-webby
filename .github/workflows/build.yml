@@ -17,7 +17,7 @@ jobs:
       -  name: Build
          run: |
             mvn -Dtycho.pomless.aggregator.names=plugins,features,sites clean install
-         shell: cmd
+         shell: bash
       -  name: Release
          uses: "marvinpinto/action-automatic-releases@latest"
          with:
@@ -27,3 +27,18 @@ jobs:
              title: "Development Build"
              files: |
                ./sites/org.sonatype.m2e.webby.repository/target/org.sonatype.m2e.webby-0.3.0-SNAPSHOT.zip
+      -  name: Publish p2 update site
+         env:
+            ACTIONS_TOKEN: ${{ secrets.ACTIONS_TOKEN }}
+         run: |-
+            git clone --branch update-site https://github.com/RoiSoleil/m2eclipse-webby
+            cd swt-cef-browser
+            cd latest
+            git config user.name "RoiSoleil"
+            git config user.email "helios.gilles@gmail.com"
+            rm -fr *
+            cp -r ../../sites/target/repository/* .
+            git add .
+            git commit -m "New version of the update site"
+            git push -f https://RoiSoleil:$ACTIONS_TOKEN@github.com/RoiSoleil/m2eclipse-webby update-site
+         shell: bash
