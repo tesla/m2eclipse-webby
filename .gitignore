@@ -4,6 +4,7 @@
 *.iws
 .classpath
 .project
+.polyglot.*
 .settings/
 target/
 bin/

@@ -1,0 +1,29 @@
+name: build
+on:
+   push:
+      branches:
+      - main
+jobs:
+   build:
+      runs-on: windows-latest
+      steps:
+      -  name: Checkout
+         uses: actions/checkout@v2
+      -  name: Set up JDK 11
+         uses: actions/setup-java@v2
+         with:
+            distribution: temurin
+            java-version: 11
+      -  name: Build
+         run: |
+            mvn -Dtycho.pomless.aggregator.names=plugins,features,sites clean install
+         shell: cmd
+      -  name: Release
+         uses: "marvinpinto/action-automatic-releases@latest"
+         with:
+             repo_token: "${{ secrets.GITHUB_TOKEN }}"
+             automatic_release_tag: "latest"
+             prerelease: true
+             title: "Development Build"
+             files: |
+               ./sites/org.sonatype.m2e.webby.repository/target/org.sonatype.m2e.webby-0.3.0-SNAPSHOT.zip
