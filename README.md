@@ -18,14 +18,6 @@ Once a WAR project has been launched by Webby, it will be listed in Webby's "Web
 
 You will get the most out of Webby when you launch your web applications in debug mode. Debug mode enables Eclipse's hot code replace feature that allows to incorporate many changes to Java sources like servlets on the fly into the running web application without restarting it.
 
-# Contribution
-When submitting patches, please follow the existing code style. The corresponding formatter settings for Eclipse can
-be imported from the codestyle.xml file found in the root directory.
-
-Any patches submitted will need to be accompanied by a signed Contributor License Agreement (CLA). If you have not
-aleady signed this CLA, please download the [Takari Contributor License Agreement](http://takari.io/support/TakariCLA.pdf)
-and follow its instructions.
-
 # Update Site
 
 You can find the latest build of Webby here:
