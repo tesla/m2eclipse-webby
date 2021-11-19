@@ -32,7 +32,7 @@ jobs:
             ACTIONS_TOKEN: ${{ secrets.ACTIONS_TOKEN }}
          run: |-
             git clone --branch update-site https://github.com/RoiSoleil/m2eclipse-webby
-            cd swt-cef-browser
+            cd m2eclipse-webby
             cd latest
             git config user.name "RoiSoleil"
             git config user.email "helios.gilles@gmail.com"
