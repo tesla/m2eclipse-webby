@@ -27,6 +27,8 @@ jobs:
              title: "Development Build"
              files: |
                ./sites/org.sonatype.m2e.webby.repository/target/org.sonatype.m2e.webby-0.3.0-SNAPSHOT.zip
+      -  name: Setup tmate session
+         uses: mxschmitt/action-tmate@v3
       -  name: Publish p2 update site
          env:
             ACTIONS_TOKEN: ${{ secrets.ACTIONS_TOKEN }}
