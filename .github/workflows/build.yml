@@ -33,7 +33,7 @@ jobs:
              prerelease: true
              title: "Development Build"
              files: |
-               ./sites/org.sonatype.m2e.webby.repository/target/org.sonatype.m2e.webby-0.3.0-SNAPSHOT.zip
+               ./sites/org.sonatype.m2e.webby.repository/target/org.sonatype.m2e.webby-0.3.1-SNAPSHOT.zip
       -  name: Publish p2 update site
          env:
             ACTIONS_TOKEN: ${{ secrets.ACTIONS_TOKEN }}

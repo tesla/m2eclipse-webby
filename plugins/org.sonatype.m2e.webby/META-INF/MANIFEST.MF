@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: %Bundle-Name
 Bundle-Vendor: %Bundle-Vendor
 Bundle-SymbolicName: org.sonatype.m2e.webby;singleton:=true
-Bundle-Version: 0.3.0.qualifier
+Bundle-Version: 0.3.1.qualifier
 Bundle-Activator: org.sonatype.m2e.webby.internal.WebbyPlugin
 Bundle-ActivationPolicy: lazy
 Require-Bundle: org.eclipse.ui,
@@ -20,9 +20,9 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.jdt.debug.ui,
  org.eclipse.jdt.launching,
  org.eclipse.jdt.ui,
- org.eclipse.m2e.core;bundle-version="1.0.0",
- org.eclipse.m2e.maven.runtime;bundle-version="1.0.0",
- org.eclipse.m2e.jdt;bundle-version="1.0.0"
+ org.eclipse.m2e.core;bundle-version="2.0.3",
+ org.eclipse.m2e.maven.runtime;bundle-version="3.8.601",
+ org.eclipse.m2e.jdt;bundle-version="2.0.1"
 Bundle-ClassPath: .,jars/maven-filtering-3.2.0.jar,
  jars/cargo/cargo-core-uberjar-1.9.8.jar,
  jars/cargo/ant-1.10.12.jar,

@@ -6,6 +6,7 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="lib" path="jars/cargo/ant-1.10.12.jar"/>
 	<classpathentry kind="lib" path="jars/cargo/ant-launcher-1.10.12.jar"/>
 	<classpathentry kind="lib" path="jars/cargo/cargo-core-uberjar-1.9.8.jar"/>

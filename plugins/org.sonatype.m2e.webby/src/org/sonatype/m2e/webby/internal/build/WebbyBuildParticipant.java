@@ -67,7 +67,7 @@ public class WebbyBuildParticipant extends AbstractBuildParticipant {
 
       MavenSession mvnSession = getSession();
 
-      WarConfiguration warConfig = new WarConfigurationExtractor().getConfiguration(mvnFacade, mvnProject, mvnSession,
+      WarConfiguration warConfig = new WarConfigurationExtractor().getConfiguration(mvnFacade, mvnProject,
           pm.newChild(15));
 
       Map<String, Artifact> overlayArtifacts = WarUtils.getOverlayArtifacts(mvnProject);

@@ -12,22 +12,12 @@ import java.io.File;
 import java.util.Map;
 
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.execution.MavenExecutionRequest;
-import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.SubMonitor;
-import org.eclipse.m2e.core.MavenPlugin;
-import org.eclipse.m2e.core.embedder.IMaven;
+import org.eclipse.core.runtime.*;
 import org.eclipse.m2e.core.project.IMavenProjectFacade;
 import org.sonatype.m2e.webby.internal.WebbyPlugin;
-import org.sonatype.m2e.webby.internal.config.OverlayConfiguration;
-import org.sonatype.m2e.webby.internal.config.WarConfiguration;
-import org.sonatype.m2e.webby.internal.config.WarConfigurationExtractor;
-import org.sonatype.m2e.webby.internal.util.FilenameMapper;
-import org.sonatype.m2e.webby.internal.util.PathCollector;
-import org.sonatype.m2e.webby.internal.util.PathSelector;
+import org.sonatype.m2e.webby.internal.config.*;
+import org.sonatype.m2e.webby.internal.util.*;
 
 
 
@@ -55,14 +45,10 @@ public class ProjectClasspathContributor extends ClasspathContributor {
 
       MavenProject mvnProject = mvnFacade.getMavenProject(pm.newChild(30));
 
-      IMaven mvn = MavenPlugin.getMaven();
-      MavenExecutionRequest mvnRequest = mvn.createExecutionRequest(pm.newChild(10));
-      MavenSession mvnSession = mvn.createSession(mvnRequest, mvnProject);
-
       WarConfiguration warConfig;
       try {
         warConfig = new WarConfigurationExtractor()
-            .getConfiguration(mvnFacade, mvnProject, mvnSession, pm.newChild(10));
+            .getConfiguration(mvnFacade, mvnProject, pm.newChild(10));
       } catch(CoreException e) {
         throw WebbyPlugin.newError("Could not read configuration of maven-war-plugin for overlay from project "
             + mvnProject.getId(), e);
