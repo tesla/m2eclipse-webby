@@ -8,25 +8,17 @@
 
 package org.sonatype.m2e.webby.internal.build;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.project.MavenProject;
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResourceDelta;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.Path;
+import org.eclipse.core.resources.*;
+import org.eclipse.core.runtime.*;
 import org.eclipse.m2e.core.project.IMavenProjectFacade;
-import org.sonatype.m2e.webby.internal.config.ResourceConfiguration;
-import org.sonatype.m2e.webby.internal.config.WarConfiguration;
-import org.sonatype.m2e.webby.internal.util.FilenameMapper;
-import org.sonatype.m2e.webby.internal.util.PathCollector;
-import org.sonatype.m2e.webby.internal.util.PathSelector;
+import org.sonatype.m2e.webby.internal.config.*;
+import org.sonatype.m2e.webby.internal.util.*;
 
 
 
@@ -95,7 +87,7 @@ public class MainResourceContributor extends ResourceContributor {
           if(assembler.registerTargetPath(targetPath, ordinal)) {
             File sourceFile = new File(basedir, file);
             try {
-              InputStream is = new FileInputStream(sourceFile);
+              InputStream is = getInputStream(sourceFile, file, resDelta);
               try {
                 assembler.copyResourceFile(is, targetPath, filtering, encoding, sourceFile.lastModified());
               } finally {
@@ -156,6 +148,39 @@ public class MainResourceContributor extends ResourceContributor {
         monitor.done();
       }
     }
+  }
+
+  private InputStream getInputStream(File sourceFile, String file, IResourceDelta resDelta) throws FileNotFoundException {
+    InputStream is = null;
+    try {
+      is = new FileInputStream(sourceFile);
+    } catch (FileNotFoundException e) {
+      try {
+        // Fix for virtual folder
+        AtomicReference<IFile> _file = new AtomicReference<>();
+        resDelta.accept(new IResourceDeltaVisitor() {
+          @Override
+          public boolean visit(IResourceDelta delta) throws CoreException {
+            if (_file.get() != null) {
+              return false;
+            }
+            if(delta.getResource() instanceof IFile) {
+              IFile res = (IFile) delta.getResource();
+              if(res.getFullPath().toOSString().contains(file)) {
+                _file.set(res);
+              }
+            }
+            return true;
+          }
+        });
+        if (_file.get() != null) {
+          return _file.get().getContents();
+        }
+      } catch (CoreException e1) {
+        throw e;
+      }
+    }
+    return is;
   }
 
   private String getWebXml() {
