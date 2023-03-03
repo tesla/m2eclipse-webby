@@ -19,17 +19,20 @@ import org.codehaus.cargo.container.configuration.*;
 import org.codehaus.cargo.container.deployable.*;
 import org.codehaus.cargo.container.jetty.JettyPropertySet;
 import org.codehaus.cargo.container.property.*;
+import org.codehaus.cargo.container.spi.configuration.AbstractStandaloneLocalConfiguration;
 import org.codehaus.cargo.container.tomcat.TomcatPropertySet;
 import org.codehaus.cargo.generic.*;
 import org.codehaus.cargo.generic.configuration.*;
 import org.codehaus.cargo.generic.deployable.*;
 import org.codehaus.cargo.util.CargoException;
+import org.codehaus.cargo.util.XmlReplacement.ReplacementBehavior;
 import org.eclipse.core.runtime.*;
 import org.eclipse.core.variables.VariablesPlugin;
 import org.eclipse.debug.core.*;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.launching.*;
 import org.eclipse.m2e.core.project.IMavenProjectFacade;
+import org.eclipse.swt.program.Program;
 import org.eclipse.ui.console.*;
 import org.sonatype.m2e.webby.internal.*;
 import org.sonatype.m2e.webby.internal.config.*;
@@ -118,8 +121,12 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
       } else {
         webApp = launchInstalled(cargo, configuration, mode, launch, pm.newChild(40));
       }
-
-      WebbyPlugin.getDefault().getWebAppRegistry().addWebApp(webApp);
+      if(!launch.isTerminated()) {
+        if (configuration.getAttribute(WebbyLaunchConstants.ATTR_OPEN_WHEN_STARTED, true)) {
+          Program.launch("http://localhost:" + webApp.getPort() + "/" + webApp.getContext());
+        }
+        WebbyPlugin.getDefault().getWebAppRegistry().addWebApp(webApp);
+      }
     } finally {
       if(monitor != null) {
         monitor.done();
@@ -219,6 +226,10 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
 
       LocalConfiguration localConfig = (LocalConfiguration) config;
       localConfig.addDeployable(dep);
+      if(configuration.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_DISABLE_WS_SCI, true) && localConfig instanceof AbstractStandaloneLocalConfiguration) {
+        AbstractStandaloneLocalConfiguration abstractStandaloneLocalConfiguration = (AbstractStandaloneLocalConfiguration) localConfig;
+        abstractStandaloneLocalConfiguration.addXmlReplacement("conf/server.xml", "//Server/Service/Engine/Host/Context", "containerSciFilter", "WsSci", ReplacementBehavior.IGNORE_IF_NON_EXISTING);
+      }
 
       ContainerFactory containerFactory = new DefaultContainerFactory();
       Container container = containerFactory.createContainer(cargo.getContainerId(), cargo.getContainerType(), config);

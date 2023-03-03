@@ -40,12 +40,7 @@ import org.eclipse.jdt.ui.JavaElementLabelProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseWheelListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
@@ -76,6 +71,8 @@ public class WebbyTab extends JavaLaunchTab {
 
   private Text contextName;
 
+  private Button openWhenStarted;
+
   private Combo containerId;
 
   private Combo containerType;
@@ -91,6 +88,8 @@ public class WebbyTab extends JavaLaunchTab {
   private Spinner containerPort;
 
   private Spinner containerTimeout;
+
+  private Button containerDisableWsSci;
 
   private SortedMap<String, SortedSet<String>> containers;
 
@@ -148,7 +147,26 @@ public class WebbyTab extends JavaLaunchTab {
     contextName.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
     contextName.setFont(font);
 
-    return;
+    Label lbl = new Label(group, SWT.NONE);
+    lbl.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
+
+    new Label(group, SWT.LEFT).setText("Open when started:");
+
+    openWhenStarted = new Button(group, SWT.CHECK);
+    openWhenStarted.setFont(font);
+    openWhenStarted.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+    openWhenStarted.addSelectionListener(new SelectionListener() {
+
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+        updateLaunchConfigurationDialog();
+      }
+
+      @Override
+      public void widgetDefaultSelected(SelectionEvent e) {
+        updateLaunchConfigurationDialog();
+      }
+    });
   }
 
   private boolean isEmbeddedContainerInstalled(String containerId) {
@@ -313,6 +331,27 @@ public class WebbyTab extends JavaLaunchTab {
       }
     });
 
+    SWTFactory.createHorizontalSpacer(group, 3);
+
+    new Label(group, SWT.LEFT).setText("Disable WsSci:");
+
+    containerDisableWsSci = new Button(group, SWT.CHECK);
+    containerDisableWsSci.setFont(font);
+    containerDisableWsSci.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
+    containerDisableWsSci.addSelectionListener(new SelectionListener() {
+
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+        updateLaunchConfigurationDialog();
+      }
+
+      @Override
+      public void widgetDefaultSelected(SelectionEvent e) {
+        updateLaunchConfigurationDialog();
+
+      }
+    });
+
     return;
   }
 
@@ -340,6 +379,7 @@ public class WebbyTab extends JavaLaunchTab {
     containerHome.setEnabled(homeEnabled);
     containerHomeBrowse.setEnabled(homeEnabled);
     containerHomeVariables.setEnabled(homeEnabled);
+    containerDisableWsSci.setEnabled(homeEnabled);
   }
 
   private IJavaProject chooseJavaProject() {
@@ -479,7 +519,23 @@ public class WebbyTab extends JavaLaunchTab {
       }
     }
     this.containerTimeout.setSelection(containerTimeout);
-    
+
+    boolean disableWsSci = true;
+    try {
+      disableWsSci = config.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_DISABLE_WS_SCI, true);
+    } catch(CoreException ce) {
+      setErrorMessage(ce.getStatus().getMessage());
+    }
+    this.containerDisableWsSci.setSelection(disableWsSci);
+
+    boolean openWhenStarted = true;
+    try {
+      openWhenStarted = config.getAttribute(WebbyLaunchConstants.ATTR_OPEN_WHEN_STARTED, true);
+    } catch(CoreException ce) {
+      setErrorMessage(ce.getStatus().getMessage());
+    }
+    this.openWhenStarted.setSelection(openWhenStarted);
+
     super.initializeFrom(config);
   }
 
@@ -497,12 +553,14 @@ public class WebbyTab extends JavaLaunchTab {
     String projectName = this.projectName.getText().trim();
     config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, projectName);
     config.setAttribute(WebbyLaunchConstants.ATTR_CONTEXT_NAME, contextName.getText().trim());
+    config.setAttribute(WebbyLaunchConstants.ATTR_OPEN_WHEN_STARTED, openWhenStarted.getSelection());
     config.setAttribute(WebbyLaunchConstants.ATTR_CONTAINER_ID, containerId.getText().trim());
     config.setAttribute(WebbyLaunchConstants.ATTR_CONTAINER_TYPE, containerType.getText().trim());
     config.setAttribute(WebbyLaunchConstants.ATTR_CONTAINER_HOME, containerHome.getText().trim());
     config.setAttribute(WebbyLaunchConstants.ATTR_LOG_LEVEL, containerLogging.getText().trim());
     config.setAttribute(WebbyLaunchConstants.ATTR_CONTAINER_PORT, containerPort.getSelection());
     config.setAttribute(WebbyLaunchConstants.ATTR_CONTAINER_TIMEOUT, containerTimeout.getSelection());
+    config.setAttribute(WebbyLaunchConstants.ATTR_CONTAINER_DISABLE_WS_SCI, containerDisableWsSci.getSelection());
 
     IProject project = null;
     if(projectName.length() > 0) {

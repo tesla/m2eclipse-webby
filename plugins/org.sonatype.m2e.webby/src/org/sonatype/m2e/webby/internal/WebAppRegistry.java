@@ -54,7 +54,6 @@ public class WebAppRegistry {
       return;
     }
     webApps.put(webApp, Boolean.TRUE);
-
     for(IWebAppListener listener : listeners) {
       try {
         listener.webAppStarted(webApp);
@@ -96,11 +95,11 @@ public class WebAppRegistry {
       }
     }
 
-    public void launchesAdded(ILaunch[] launches) {
-      // irrelevant
+    public void launchesRemoved(ILaunch[] launches) {
+      launchesTerminated(launches);
     }
 
-    public void launchesRemoved(ILaunch[] launches) {
+    public void launchesAdded(ILaunch[] launches) {
       // irrelevant
     }
 

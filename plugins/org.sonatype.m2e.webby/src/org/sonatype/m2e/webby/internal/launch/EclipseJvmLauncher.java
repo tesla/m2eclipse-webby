@@ -19,6 +19,7 @@ import java.util.Map;
 import org.apache.tools.ant.types.Commandline;
 import org.codehaus.cargo.container.spi.jvm.JvmLauncher;
 import org.codehaus.cargo.container.spi.jvm.JvmLauncherException;
+import org.codehaus.cargo.util.log.Logger;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.debug.core.ILaunch;
@@ -252,6 +253,13 @@ public class EclipseJvmLauncher implements JvmLauncher {
     if (name != null && name.length() > 0) {
       envVariables.add(name + "=" + value);
     }
+  }
+
+  /**
+   * From cargo, not implemented yet
+   */
+  @Override
+  public void setOutputLogger(Logger outputLogger, String category) {
   }
 
 }

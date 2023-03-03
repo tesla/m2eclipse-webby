@@ -8,6 +8,8 @@
 
 package org.sonatype.m2e.webby.internal;
 
+import java.net.*;
+
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -26,6 +28,8 @@ public class WebbyImages {
   public static final Image LAUNCH_CONFIG = createImage("webby.gif", LAUNCH_CONFIG_DESC);
 
   public static final ImageDescriptor STOP_DESC = createImageDescriptor("stop.gif");
+
+  public static final ImageDescriptor RESTART_DESC = createImageFromURL("platform:/plugin/org.eclipse.debug.ui.launchview/icons/term_restart.png");
 
   public static final ImageDescriptor BROWSE_DESC = createImageDescriptor("browse.gif");
 
@@ -50,4 +54,12 @@ public class WebbyImages {
     return imageDescriptor;
   }
 
+  protected static ImageDescriptor createImageFromURL(String url) {
+    try {
+      return ImageDescriptor.createFromURL(new URL(url));
+    } catch (MalformedURLException e) {
+      // Rien à faire.
+    }
+    return null;
+  }
 }

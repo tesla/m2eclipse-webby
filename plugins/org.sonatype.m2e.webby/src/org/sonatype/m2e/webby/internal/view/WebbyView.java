@@ -15,6 +15,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.debug.internal.ui.actions.RelaunchActionDelegate;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -58,6 +59,8 @@ public class WebbyView extends ViewPart implements IWebAppListener {
   private Action browse;
 
   private Action stop;
+
+  private Action restart;
 
   public WebbyView() {
     webAppRegistry = WebbyPlugin.getDefault().getWebAppRegistry();
@@ -127,6 +130,23 @@ public class WebbyView extends ViewPart implements IWebAppListener {
     }
   }
 
+  private void restart() {
+    for(TableItem item : table.getSelection()) {
+      final IWebApp webApp = (IWebApp) item.getData();
+      Job job = new Job("Restarting " + webApp.getContainerId() + ":" + webApp.getPort() + "/" + webApp.getContext()) {
+        @Override
+        protected IStatus run(IProgressMonitor monitor) {
+          try {
+            RelaunchActionDelegate.relaunch(webApp.getLaunch().getLaunchConfiguration(), webApp.getLaunch().getLaunchMode(), true);
+            return Status.OK_STATUS;
+          } catch(Exception e) {
+            return WebbyPlugin.newStatus(e.getMessage(), e);
+          }
+        }
+      };
+      job.schedule();
+    }
+  }
   private void browse(boolean external) {
     if(table.getSelectionCount() != 1) {
       return;
@@ -196,6 +216,7 @@ public class WebbyView extends ViewPart implements IWebAppListener {
 
   private void updateActions() {
     stop.setEnabled(table.getSelectionCount() > 0);
+    restart.setEnabled(table.getSelectionCount() > 0);
     browse.setEnabled(table.getSelectionCount() == 1);
   }
 
@@ -207,6 +228,13 @@ public class WebbyView extends ViewPart implements IWebAppListener {
       }
     };
     stop.setToolTipText("Stops the selected web applications");
+    restart = new Action("Restart", WebbyImages.RESTART_DESC) {
+      @Override
+      public void run() {
+        restart();
+      }
+    };
+    restart.setToolTipText("Restart the selected web applications");
     browse = new Action("Browse", WebbyImages.BROWSE_DESC) {
       @Override
       public void runWithEvent(Event event) {
@@ -222,6 +250,7 @@ public class WebbyView extends ViewPart implements IWebAppListener {
     mgr.add(browse);
     mgr.add(new Separator());
     mgr.add(stop);
+    mgr.add(restart);
   }
 
   private void hookContextMenu() {
