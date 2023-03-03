@@ -9,6 +9,10 @@ jobs:
       steps:
       -  name: Checkout
          uses: actions/checkout@v2
+      -  name: Set up Maven
+         uses: stCarolas/setup-maven@v4.5
+         with:
+            maven-version: 3.8.7
       -  name: Set up JDK 17
          uses: actions/setup-java@v2
          with:
@@ -33,7 +37,7 @@ jobs:
              prerelease: true
              title: "Development Build"
              files: |
-               ./sites/org.sonatype.m2e.webby.repository/target/org.sonatype.m2e.webby-0.3.1-SNAPSHOT.zip
+               ./sites/org.sonatype.m2e.webby.repository/target/org.sonatype.m2e.webby-*-SNAPSHOT.zip
       -  name: Publish p2 update site
          env:
             ACTIONS_TOKEN: ${{ secrets.ACTIONS_TOKEN }}
