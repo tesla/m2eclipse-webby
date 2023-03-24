@@ -5,7 +5,7 @@ on:
       - master
 jobs:
    build:
-      runs-on: windows-latest
+      runs-on: ubuntu-latest
       steps:
       -  name: Checkout
          uses: actions/checkout@v2
@@ -34,7 +34,7 @@ jobs:
         with:
           trust: https://gist.github.com
           script: https://gist.github.com/fbricon/3c718d03f55c3ceba5dea570af4af5f8
-          scriptargs: ./sites/org.sonatype.m2e.webby.repository
+          args: ./sites/org.sonatype.m2e.webby.repository
       - name: Upload flat p2 update site
         if: github.ref == 'refs/heads/main'
         uses: marvinpinto/action-automatic-releases@latest
