@@ -2,8 +2,6 @@
 *.iml
 *.ipr
 *.iws
-.classpath
-.project
-.settings/
+.polyglot.*
 target/
 bin/

@@ -1,0 +1,55 @@
+name: build
+on:
+   push:
+      branches:
+      - master
+jobs:
+   build:
+      runs-on: windows-latest
+      steps:
+      -  name: Checkout
+         uses: actions/checkout@v2
+      -  name: Set up Maven
+         uses: stCarolas/setup-maven@v4.5
+         with:
+            maven-version: 3.8.7
+      -  name: Set up JDK 17
+         uses: actions/setup-java@v2
+         with:
+            distribution: temurin
+            java-version: 17
+      -  name: Set up cache
+         uses: actions/cache@v1
+         with:
+           path: ~/.m2/repository
+           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+           restore-keys: |
+             ${{ runner.os }}-maven-
+      -  name: Build
+         run: |
+            mvn -Dtycho.pomless.aggregator.names=plugins,features,sites clean install
+         shell: bash
+      -  name: Release
+         uses: "marvinpinto/action-automatic-releases@latest"
+         with:
+             repo_token: "${{ secrets.GITHUB_TOKEN }}"
+             automatic_release_tag: "latest"
+             prerelease: true
+             title: "Development Build"
+             files: |
+               ./sites/org.sonatype.m2e.webby.repository/target/org.sonatype.m2e.webby-*-SNAPSHOT.zip
+      -  name: Publish p2 update site
+         env:
+            ACTIONS_TOKEN: ${{ secrets.ACTIONS_TOKEN }}
+         run: |-
+            git clone --branch update-site https://github.com/RoiSoleil/m2eclipse-webby
+            cd m2eclipse-webby
+            cd latest
+            git config user.name "RoiSoleil"
+            git config user.email "helios.gilles@gmail.com"
+            rm -fr *
+            cp -r ../../sites/org.sonatype.m2e.webby.repository/target/repository/* .
+            git add .
+            git commit -m "New version of the update site"
+            git push -f https://RoiSoleil:$ACTIONS_TOKEN@github.com/RoiSoleil/m2eclipse-webby update-site
+         shell: bash

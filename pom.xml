@@ -11,40 +11,82 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>io.takari.tycho</groupId>
-    <artifactId>tycho-support</artifactId>
-    <version>0.15.0</version>
-  </parent>
-
   <groupId>org.sonatype.m2e.webby</groupId>
   <artifactId>org.sonatype.m2e.webby.parent</artifactId>
-  <version>0.2.2-SNAPSHOT</version>
+  <version>0.3.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <properties>
     <repositoryPathId>m2eclipse-webby</repositoryPathId>
     <p2MetadataName>M2E Webby Connector</p2MetadataName>
+    <tycho.version>3.0.3</tycho.version>
+    <eclipse-repo.url>http://download.eclipse.org/releases/2022-12</eclipse-repo.url>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
   </properties>  
-  
-  <modules>
-    <module>org.sonatype.m2e.webby</module>
-    <module>org.sonatype.m2e.webby.feature</module>
-    <module>org.sonatype.m2e.webby.jetty6x</module>
-    <module>org.sonatype.m2e.webby.jetty6x.feature</module>
-    <module>org.sonatype.m2e.webby.jetty7x</module>
-    <module>org.sonatype.m2e.webby.jetty7x.feature</module>
-    <module>org.sonatype.m2e.webby.jetty8x</module>
-    <module>org.sonatype.m2e.webby.jetty8x.feature</module>
-    <module>org.sonatype.m2e.webby.repository</module>
-  </modules>
-  
+
   <repositories>
     <repository>
-      <id>eclipse-commons</id>
-      <url>http://repository.sonatype.org/content/sites/forge-sites/eclipse-commons/1.1.7/N/1.1.7.201105091728</url>
+      <id>eclipse-release</id>
+      <url>${eclipse-repo.url}</url>
       <layout>p2</layout>
     </repository>
-  </repositories>     
+  </repositories>
 
+  <modules>
+    <module>plugins</module>
+    <module>features</module>
+    <module>sites</module>
+  </modules>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>target-platform-configuration</artifactId>
+        <version>${tycho.version}</version>
+        <configuration>
+          <environments>
+            <environment>
+              <os>win32</os>
+              <ws>win32</ws>
+              <arch>x86_64</arch>
+            </environment>
+          </environments>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-maven-plugin</artifactId>
+        <version>${tycho.version}</version>
+        <extensions>true</extensions>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho.versions-plugin</artifactId>
+        <version>${tycho.version}</version>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-p2-repository-plugin</artifactId>
+        <version>${tycho.version}</version>
+        <configuration>
+          <finalName>org.sonatype.m2e.webby-${project.version}</finalName>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-surefire-plugin</artifactId>
+        <version>${tycho.version}</version>
+        <configuration>
+          <useUIHarness>true</useUIHarness>
+          <includes>
+            <include>**/*Test.java</include>
+          </includes>
+          <forkedProcessTimeoutInSeconds>7200</forkedProcessTimeoutInSeconds>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

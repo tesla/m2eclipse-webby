@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: %Bundle-Name
+Bundle-Vendor: %Bundle-Vendor
+Bundle-SymbolicName: org.sonatype.m2e.webby.jetty7x;singleton:=true
+Bundle-Version: 0.3.1.qualifier
+Bundle-RequiredExecutionEnvironment: JavaSE-17
+Fragment-Host: org.sonatype.m2e.webby;bundle-version="0.2.0"
