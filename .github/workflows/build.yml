@@ -30,7 +30,7 @@ jobs:
             mvn -Dtycho.pomless.aggregator.names=plugins,features,sites clean install
          shell: bash
       - name: Flatten p2 update site
-        uses: jbangdev/jbang-action@v0.16.1
+        uses: jbangdev/jbang-action@v0.105.1
         with:
           trust: https://gist.github.com
           script: https://gist.github.com/fbricon/3c718d03f55c3ceba5dea570af4af5f8
