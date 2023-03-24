@@ -36,7 +36,7 @@ jobs:
           script: https://gist.github.com/fbricon/3c718d03f55c3ceba5dea570af4af5f8
           args: ./sites/org.sonatype.m2e.webby.repository
       - name: Upload flat p2 update site
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/master'
         uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: "${{secrets.GITHUB_TOKEN}}"
