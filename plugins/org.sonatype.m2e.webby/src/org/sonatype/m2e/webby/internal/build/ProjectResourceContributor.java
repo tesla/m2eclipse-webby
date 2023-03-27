@@ -1,31 +1,13 @@
-/*******************************************************************************
- * Copyright (c) 2011 Sonatype, Inc.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
-
 package org.sonatype.m2e.webby.internal.build;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 import org.eclipse.core.resources.IResourceDelta;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.*;
 import org.eclipse.m2e.core.project.IMavenProjectFacade;
-import org.sonatype.m2e.webby.internal.config.OverlayConfiguration;
-import org.sonatype.m2e.webby.internal.config.WarConfigurationExtractor;
+import org.sonatype.m2e.webby.internal.config.*;
 import org.sonatype.m2e.webby.internal.util.PathCollector;
 
-
-
-/**
- */
 public class ProjectResourceContributor extends ResourceContributor {
 
   private IMavenProjectFacade mvnFacade;
@@ -47,8 +29,9 @@ public class ProjectResourceContributor extends ResourceContributor {
       File warDir;
       try {
         warDir = new File(new WarConfigurationExtractor().getWorkDirectory(mvnFacade
-            .getMavenProject(new NullProgressMonitor())), "war");
-      } catch(CoreException e) {
+                                                                                    .getMavenProject(new NullProgressMonitor())),
+            "war");
+      } catch (CoreException e) {
         assembler.addError(e);
         return;
       }
@@ -57,7 +40,7 @@ public class ProjectResourceContributor extends ResourceContributor {
 
       String[][] files;
 
-      if(resDelta != null) {
+      if (resDelta != null) {
         IResourceDelta childDelta = ResourceDeltaUtils.findChildDelta(resDelta, mvnFacade.getProject(), warDir);
         files = pathCollector.collectFiles(childDelta);
       } else {
@@ -66,12 +49,12 @@ public class ProjectResourceContributor extends ResourceContributor {
         files[1] = new String[0];
       }
 
-      for(String file : files[1]) {
+      for (String file : files[1]) {
         String targetPath = overlayConfig.getTargetPath(file);
         assembler.unregisterTargetPath(targetPath, ordinal);
       }
 
-      if(resDelta != null) {
+      if (resDelta != null) {
         files[0] = assembler.appendDirtyTargetPaths(files[0], ordinal, warDir.getAbsolutePath(),
             overlayConfig.getTargetPath());
       }
@@ -79,9 +62,9 @@ public class ProjectResourceContributor extends ResourceContributor {
       boolean filtering = overlayConfig.isFiltering();
       String encoding = overlayConfig.getEncoding();
 
-      for(String file : files[0]) {
+      for (String file : files[0]) {
         String targetPath = overlayConfig.getTargetPath(file);
-        if(assembler.registerTargetPath(targetPath, ordinal)) {
+        if (assembler.registerTargetPath(targetPath, ordinal)) {
           File sourceFile = new File(warDir, file);
           try {
             InputStream is = new FileInputStream(sourceFile);
@@ -90,13 +73,13 @@ public class ProjectResourceContributor extends ResourceContributor {
             } finally {
               is.close();
             }
-          } catch(IOException e) {
+          } catch (IOException e) {
             assembler.addError(sourceFile.getAbsolutePath(), targetPath, e);
           }
         }
       }
     } finally {
-      if(monitor != null) {
+      if (monitor != null) {
         monitor.done();
       }
     }

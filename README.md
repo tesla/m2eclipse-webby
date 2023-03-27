@@ -4,7 +4,7 @@ To ease running and debugging of web applications created by the Maven WAR Plugi
 
 Warning: Webby cannot be installed side-by-side with the m2e-wtp extension. Trying to do so will render one or both of the extensions unusable.
 
-![webby-launch-config](http://takari.io/assets/webby/webby-launch-config.png)
+![webby-launch-config](readme/Webby.png)
 
 The primary focus of Webby is to allow running WAR projects without the time consumption of creating the actual WAR file, yet supporting advanced features like resource filtering and overlays while the developer makes incremental changes to the project within the IDE.
 
@@ -14,7 +14,7 @@ Given the similarity with the jetty:run goal that developers often use on the co
 
 Once a WAR project has been launched by Webby, it will be listed in Webby's "Web Apps" view. You can open this view via the menu command "Window" > "Show View" > "Other...". This view simply allows one to open the web application in a browser and to stop it. For simple applications that don't require an orderly shutdown, you could also stop the application by terminating the JVM running it, e.g. via the "Terminate" button in the console view created for the web application.
 
-![webby-view](http://takari.io/assets/webby/webby-view.png)
+![webby-view](readme/Webby2.png)
 
 You will get the most out of Webby when you launch your web applications in debug mode. Debug mode enables Eclipse's hot code replace feature that allows to incorporate many changes to Java sources like servlets on the fly into the running web application without restarting it.
 

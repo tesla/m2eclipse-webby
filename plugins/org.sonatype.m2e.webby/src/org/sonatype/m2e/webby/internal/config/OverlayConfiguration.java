@@ -1,31 +1,17 @@
-/*******************************************************************************
- * Copyright (c) 2011 Sonatype, Inc.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
-
 package org.sonatype.m2e.webby.internal.config;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import org.sonatype.m2e.webby.internal.util.WarUtils;
 
-
-
-/**
- */
 public class OverlayConfiguration implements Serializable {
 
   private static final long serialVersionUID = 8370499954146691677L;
 
-  private static final String[] DEFAULT_INCLUDES = new String[] {"**/**"};
+  private static final String[] DEFAULT_INCLUDES = new String[] { "**/**" };
 
-  private static final String[] DEFAULT_EXCLUDES = new String[] {"META-INF/MANIFEST.MF"};
+  private static final String[] DEFAULT_EXCLUDES = new String[] { "META-INF/MANIFEST.MF" };
 
   private static final String DEFAULT_TYPE = "war";
 
@@ -53,7 +39,7 @@ public class OverlayConfiguration implements Serializable {
 
   private static List<String> toList(String[] array) {
     List<String> list = new ArrayList<String>();
-    if(array != null) {
+    if (array != null) {
       Collections.addAll(list, array);
     }
     return list;
@@ -68,7 +54,7 @@ public class OverlayConfiguration implements Serializable {
 
   public OverlayConfiguration(Object overlay) {
     id = ReflectionUtils.getProperty(overlay, "id", String.class, null);
-    if("null:null".equals(id)) {
+    if ("null:null".equals(id)) {
       id = null;
     }
     setGroupId(ReflectionUtils.getProperty(overlay, "groupId", String.class, groupId));
@@ -83,8 +69,8 @@ public class OverlayConfiguration implements Serializable {
   }
 
   public String getId() {
-    if(id == null || id.length() <= 0) {
-      if(isMain()) {
+    if (id == null || id.length() <= 0) {
+      if (isMain()) {
         return "(web project)";
       }
       return getArtifactKey();
@@ -97,7 +83,7 @@ public class OverlayConfiguration implements Serializable {
     buffer.append(getGroupId());
     buffer.append(':').append(getArtifactId());
     buffer.append(':').append(getType());
-    if(getClassifier().length() > 0) {
+    if (getClassifier().length() > 0) {
       buffer.append(':').append(getClassifier());
     }
     return buffer.toString();
@@ -181,10 +167,10 @@ public class OverlayConfiguration implements Serializable {
 
   public void setTargetPath(String targetPath) {
     this.targetPath = (targetPath != null) ? targetPath : "";
-    if(this.targetPath.endsWith("/")) {
+    if (this.targetPath.endsWith("/")) {
       this.targetPath = this.targetPath.substring(0, this.targetPath.length() - 1);
     }
-    if(".".equals(this.targetPath)) {
+    if (".".equals(this.targetPath)) {
       this.targetPath = "";
     }
   }
@@ -208,10 +194,10 @@ public class OverlayConfiguration implements Serializable {
 
   @Override
   public boolean equals(Object obj) {
-    if(this == obj) {
+    if (this == obj) {
       return true;
     }
-    if(!(obj instanceof OverlayConfiguration)) {
+    if (!(obj instanceof OverlayConfiguration)) {
       return false;
     }
     OverlayConfiguration that = (OverlayConfiguration) obj;

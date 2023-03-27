@@ -1,11 +1,3 @@
-/*******************************************************************************
- * Copyright (c) 2011 Sonatype, Inc.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
-
 package org.sonatype.m2e.webby.internal.config;
 
 import java.io.File;
@@ -23,10 +15,6 @@ import org.eclipse.m2e.core.project.IMavenProjectFacade;
 import org.sonatype.m2e.webby.internal.WebbyPlugin;
 import org.sonatype.m2e.webby.internal.util.PathSelector;
 
-
-
-/**
- */
 public class WarConfigurationExtractor {
 
   private static final String WAR_PLUGIN_GID = "org.apache.maven.plugins";
@@ -35,7 +23,7 @@ public class WarConfigurationExtractor {
 
   public InputLocation getConfigurationLocation(MavenProject mvnProject) {
     Plugin plugin = getWarPlugin(mvnProject);
-    if(plugin != null) {
+    if (plugin != null) {
       return plugin.getLocation("artifactId");
     }
     return null;
@@ -43,8 +31,8 @@ public class WarConfigurationExtractor {
 
   private Plugin getWarPlugin(MavenProject mvnProject) {
     List<Plugin> plugins = mvnProject.getBuildPlugins();
-    for(Plugin plugin : plugins) {
-      if(WAR_PLUGIN_GID.equals(plugin.getGroupId()) && WAR_PLUGIN_AID.equals(plugin.getArtifactId())) {
+    for (Plugin plugin : plugins) {
+      if (WAR_PLUGIN_GID.equals(plugin.getGroupId()) && WAR_PLUGIN_AID.equals(plugin.getArtifactId())) {
         return plugin;
       }
     }
@@ -57,7 +45,7 @@ public class WarConfigurationExtractor {
   }
 
   public WarConfiguration getConfiguration(IMavenProjectFacade mvnFacade, MavenProject mvnProject,
-     IProgressMonitor monitor) throws CoreException {
+      IProgressMonitor monitor) throws CoreException {
     SubMonitor pm = SubMonitor.convert(monitor, "Reading WAR configuration...", 100);
     try {
       WarConfiguration warConfig = new WarConfiguration();
@@ -75,17 +63,17 @@ public class WarConfigurationExtractor {
 
       warConfig.setClassesDirectory(resolve(basedir, mvnProject.getBuild().getOutputDirectory()));
 
-      if(!mojoExecs.isEmpty()) {
+      if (!mojoExecs.isEmpty()) {
         MojoExecution mojoExec = mojoExecs.get(0);
 
         Set<String> overlayKeys = new HashSet<String>();
         Object[] overlays = maven.getMojoParameterValue(mvnProject, mojoExec, "overlays", Object[].class, null);
-        if(overlays != null) {
+        if (overlays != null) {
           boolean mainConfigured = false;
-          for(Object overlay : overlays) {
+          for (Object overlay : overlays) {
             OverlayConfiguration overlayConfig = new OverlayConfiguration(overlay);
-            if(overlayConfig.isMain()) {
-              if(mainConfigured) {
+            if (overlayConfig.isMain()) {
+              if (mainConfigured) {
                 continue;
               }
               mainConfigured = true;
@@ -93,20 +81,20 @@ public class WarConfigurationExtractor {
             warConfig.getOverlays().add(overlayConfig);
             overlayKeys.add(overlayConfig.getArtifactKey());
           }
-          if(!mainConfigured) {
+          if (!mainConfigured) {
             warConfig.getOverlays().add(0, new OverlayConfiguration(null, null, null, null));
           }
         }
 
         Map<String, Artifact> overlayArtifacts = new LinkedHashMap<String, Artifact>();
-        for(Artifact artifact : mvnProject.getArtifacts()) {
-          if("war".equals(artifact.getType())) {
+        for (Artifact artifact : mvnProject.getArtifacts()) {
+          if ("war".equals(artifact.getType())) {
             overlayArtifacts.put(artifact.getDependencyConflictId(), artifact);
           }
         }
 
-        for(Map.Entry<String, Artifact> e : overlayArtifacts.entrySet()) {
-          if(!overlayKeys.contains(e.getKey())) {
+        for (Map.Entry<String, Artifact> e : overlayArtifacts.entrySet()) {
+          if (!overlayKeys.contains(e.getKey())) {
             Artifact a = e.getValue();
             OverlayConfiguration warOverlay = new OverlayConfiguration(a.getGroupId(), a.getArtifactId(),
                 a.getClassifier(), a.getType());
@@ -114,7 +102,7 @@ public class WarConfigurationExtractor {
           }
         }
 
-        for(OverlayConfiguration overlay : warConfig.getOverlays()) {
+        for (OverlayConfiguration overlay : warConfig.getOverlays()) {
           overlay.setEncoding(encoding);
         }
 
@@ -125,11 +113,11 @@ public class WarConfigurationExtractor {
 
         ResourceConfiguration[] resources = maven.getMojoParameterValue(mvnProject, mojoExec, "webResources",
             ResourceConfiguration[].class, null);
-        if(resources != null) {
+        if (resources != null) {
           warConfig.getResources().addAll(Arrays.asList(resources));
         }
 
-        for(ResourceConfiguration resource : warConfig.getResources()) {
+        for (ResourceConfiguration resource : warConfig.getResources()) {
           resource.setDirectory(resolve(basedir, resource.getDirectory()));
           resource.setEncoding(encoding);
         }
@@ -157,7 +145,7 @@ public class WarConfigurationExtractor {
         warConfig.getNonFilteredFileExtensions().addAll(Arrays.asList(nonFilteredFileExtensions));
 
         String[] filters = maven.getMojoParameterValue(mvnProject, mojoExec, "filters", String[].class, null);
-        for(String filter : filters) {
+        for (String filter : filters) {
           warConfig.getFilters().add(resolve(basedir, filter));
         }
 
@@ -172,7 +160,7 @@ public class WarConfigurationExtractor {
 
       return warConfig;
     } finally {
-      if(monitor != null) {
+      if (monitor != null) {
         monitor.done();
       }
     }
@@ -180,7 +168,7 @@ public class WarConfigurationExtractor {
 
   private List<String> split(String list) {
     List<String> result = new ArrayList<String>();
-    if(list != null && list.length() > 0) {
+    if (list != null && list.length() > 0) {
       Collections.addAll(result, list.split(","));
     }
     return result;
@@ -188,13 +176,13 @@ public class WarConfigurationExtractor {
 
   private String resolve(String basedir, String path) {
     String result = path;
-    if(path != null && basedir != null) {
+    if (path != null && basedir != null) {
       path = PathSelector.normalizePath(path);
       File file = new File(path);
-      if(file.isAbsolute()) {
+      if (file.isAbsolute()) {
         // path was already absolute, just normalize file separator and we're done
         result = file.getPath();
-      } else if(file.getPath().startsWith(File.separator)) {
+      } else if (file.getPath().startsWith(File.separator)) {
         // drive-relative Windows path, don't align with project directory but with drive root
         result = file.getAbsolutePath();
       } else {

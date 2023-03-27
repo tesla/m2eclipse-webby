@@ -1,11 +1,3 @@
-/*******************************************************************************
- * Copyright (c) 2011 Sonatype, Inc.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
-
 package org.sonatype.m2e.webby.internal.build;
 
 import java.io.*;
@@ -20,10 +12,6 @@ import org.eclipse.m2e.core.project.IMavenProjectFacade;
 import org.sonatype.m2e.webby.internal.config.*;
 import org.sonatype.m2e.webby.internal.util.*;
 
-
-
-/**
- */
 public class MainResourceContributor extends ResourceContributor {
 
   private static final String WEB_XML = "WEB-INF/web.xml";
@@ -51,14 +39,14 @@ public class MainResourceContributor extends ResourceContributor {
           warConfig.getPackagingExcludes());
 
       List<ResourceConfiguration> resources = warConfig.getResources();
-      for(ResourceConfiguration resource : resources) {
+      for (ResourceConfiguration resource : resources) {
         String basedir = resource.getDirectory();
 
         PathCollector pathCollector = new PathCollector(resource.getIncludes(), resource.getExcludes());
 
         String[][] files;
 
-        if(resDelta != null) {
+        if (resDelta != null) {
           IResourceDelta childDelta = ResourceDeltaUtils.findChildDelta(resDelta, project, basedir);
           files = pathCollector.collectFiles(childDelta);
         } else {
@@ -67,24 +55,24 @@ public class MainResourceContributor extends ResourceContributor {
           files[1] = new String[0];
         }
 
-        for(String file : files[1]) {
+        for (String file : files[1]) {
           String targetPath = resource.getTargetPath(file);
           assembler.unregisterTargetPath(targetPath, ordinal);
         }
 
-        if(resDelta != null) {
+        if (resDelta != null) {
           files[0] = assembler.appendDirtyTargetPaths(files[0], ordinal, basedir, "");
         }
 
         boolean filtering = resource.isFiltering();
         String encoding = resource.getEncoding();
 
-        for(String file : files[0]) {
+        for (String file : files[0]) {
           String targetPath = resource.getTargetPath(file);
-          if(!packagingSelector.isSelected(targetPath)) {
+          if (!packagingSelector.isSelected(targetPath)) {
             continue;
           }
-          if(assembler.registerTargetPath(targetPath, ordinal)) {
+          if (assembler.registerTargetPath(targetPath, ordinal)) {
             File sourceFile = new File(basedir, file);
             try {
               InputStream is = getInputStream(sourceFile, file, resDelta);
@@ -93,7 +81,7 @@ public class MainResourceContributor extends ResourceContributor {
               } finally {
                 is.close();
               }
-            } catch(IOException e) {
+            } catch (IOException e) {
               assembler.addError(sourceFile.getAbsolutePath(), targetPath, e);
             }
           }
@@ -101,9 +89,9 @@ public class MainResourceContributor extends ResourceContributor {
       }
 
       String webXml = getWebXml();
-      if(webXml != null) {
-        if(resDelta == null || ResourceDeltaUtils.findChildDelta(resDelta, project, webXml) != null) {
-          if(new File(webXml).exists()) {
+      if (webXml != null) {
+        if (resDelta == null || ResourceDeltaUtils.findChildDelta(resDelta, project, webXml) != null) {
+          if (new File(webXml).exists()) {
             try {
               InputStream is = new FileInputStream(webXml);
               try {
@@ -111,7 +99,7 @@ public class MainResourceContributor extends ResourceContributor {
               } finally {
                 is.close();
               }
-            } catch(IOException e) {
+            } catch (IOException e) {
               assembler.addError(webXml, WEB_XML, e);
             }
           } else {
@@ -120,16 +108,16 @@ public class MainResourceContributor extends ResourceContributor {
         }
       }
 
-      if(resDelta == null || resDelta.findMember(Path.fromOSString(mvnProject.getFile().getName())) != null) {
+      if (resDelta == null || resDelta.findMember(Path.fromOSString(mvnProject.getFile().getName())) != null) {
         FilenameMapper filenameMapper = new FilenameMapper(warConfig.getFilenameMapping());
         Map<String, Artifact> targetPaths = filenameMapper.getTargetPaths(mvnProject.getArtifacts());
-        for(Map.Entry<String, Artifact> entry : targetPaths.entrySet()) {
+        for (Map.Entry<String, Artifact> entry : targetPaths.entrySet()) {
           File file = entry.getValue().getFile();
-          if(file == null || !file.isFile()) {
+          if (file == null || !file.isFile()) {
             continue;
           }
           String targetPath = entry.getKey();
-          if(!targetPath.startsWith("WEB-INF/lib/") && packagingSelector.isSelected(targetPath)) {
+          if (!targetPath.startsWith("WEB-INF/lib/") && packagingSelector.isSelected(targetPath)) {
             try {
               InputStream is = new FileInputStream(file);
               try {
@@ -137,14 +125,14 @@ public class MainResourceContributor extends ResourceContributor {
               } finally {
                 is.close();
               }
-            } catch(IOException e) {
+            } catch (IOException e) {
               assembler.addError(file.getAbsolutePath(), targetPath, e);
             }
           }
         }
       }
     } finally {
-      if(monitor != null) {
+      if (monitor != null) {
         monitor.done();
       }
     }
@@ -164,9 +152,9 @@ public class MainResourceContributor extends ResourceContributor {
             if (_file.get() != null) {
               return false;
             }
-            if(delta.getResource() instanceof IFile) {
+            if (delta.getResource() instanceof IFile) {
               IFile res = (IFile) delta.getResource();
-              if(res.getFullPath().toOSString().contains(file)) {
+              if (res.getFullPath().toOSString().contains(file)) {
                 _file.set(res);
               }
             }
@@ -185,9 +173,9 @@ public class MainResourceContributor extends ResourceContributor {
 
   private String getWebXml() {
     String webXml = warConfig.getWebXml();
-    if(webXml != null && webXml.length() > 0) {
+    if (webXml != null && webXml.length() > 0) {
       return webXml;
-    } else if(!warConfig.getResources().isEmpty()) {
+    } else if (!warConfig.getResources().isEmpty()) {
       File file = new File(warConfig.getResources().get(0).getDirectory(), WEB_XML);
       return file.getAbsolutePath();
     }

@@ -1,34 +1,15 @@
-/*******************************************************************************
- * Copyright (c) 2011 Sonatype, Inc.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
-
 package org.sonatype.m2e.webby.internal.launch;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.tools.ant.types.Commandline;
-import org.codehaus.cargo.container.spi.jvm.JvmLauncher;
-import org.codehaus.cargo.container.spi.jvm.JvmLauncherException;
+import org.codehaus.cargo.container.spi.jvm.*;
 import org.codehaus.cargo.util.log.Logger;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.*;
 import org.eclipse.debug.core.ILaunch;
-import org.eclipse.jdt.launching.IVMRunner;
-import org.eclipse.jdt.launching.VMRunnerConfiguration;
+import org.eclipse.jdt.launching.*;
 
-
-/**
- */
 public class EclipseJvmLauncher implements JvmLauncher {
 
   private final IVMRunner runner;
@@ -42,13 +23,13 @@ public class EclipseJvmLauncher implements JvmLauncher {
   /** format of each element : <i>name</i>=<i>value</i> */
   private List<String> envVariables;
 
-  private List<String> jvmArguments = new ArrayList<String>();
+  private List<String> jvmArguments = new ArrayList<>();
 
-  private Map<String, String> sysProperties = new HashMap<String, String>();
+  private Map<String, String> sysProperties = new HashMap<>();
 
-  private List<String> appArguments = new ArrayList<String>();
+  private List<String> appArguments = new ArrayList<>();
 
-  private List<String> classpath = new ArrayList<String>();
+  private List<String> classpath = new ArrayList<>();
 
   private File jarFile;
 
@@ -60,14 +41,14 @@ public class EclipseJvmLauncher implements JvmLauncher {
     this.launch = launch;
     this.monitor = monitor;
     this.workingDirectory = workingDirectory;
-    if(envVariables != null) {
-      this.envVariables = new ArrayList<String>(envVariables.length);
+    if (envVariables != null) {
+      this.envVariables = new ArrayList<>(envVariables.length);
       Collections.addAll(this.envVariables, envVariables);
     }
   }
 
   public void setWorkingDirectory(File workingDirectory) {
-    if(workingDirectory != null) {
+    if (workingDirectory != null) {
       this.workingDirectory = workingDirectory;
     }
   }
@@ -77,32 +58,32 @@ public class EclipseJvmLauncher implements JvmLauncher {
   }
 
   public void addJvmArgument(File file) {
-    if(file != null) {
+    if (file != null) {
       jvmArguments.add(file.getAbsolutePath());
     }
   }
 
   public void addJvmArguments(String... values) {
-    if(values != null) {
+    if (values != null) {
       Collections.addAll(jvmArguments, values);
     }
   }
 
   public void addJvmArgumentLine(String line) {
-    if(line != null) {
+    if (line != null) {
       Collections.addAll(jvmArguments, Commandline.translateCommandline(line));
     }
   }
 
   public void addClasspathEntries(String... paths) {
-    if(paths != null) {
+    if (paths != null) {
       Collections.addAll(classpath, paths);
     }
   }
 
   public void addClasspathEntries(File... paths) {
-    if(paths != null) {
-      for(File path : paths) {
+    if (paths != null) {
+      for (File path : paths) {
         classpath.add(path.getAbsolutePath());
       }
     }
@@ -110,8 +91,8 @@ public class EclipseJvmLauncher implements JvmLauncher {
 
   public String getClasspath() {
     StringBuilder buffer = new StringBuilder(1024);
-    for(String path : classpath) {
-      if(buffer.length() > 0) {
+    for (String path : classpath) {
+      if (buffer.length() > 0) {
         buffer.append(File.pathSeparatorChar);
       }
       buffer.append(path);
@@ -120,7 +101,7 @@ public class EclipseJvmLauncher implements JvmLauncher {
   }
 
   public void setSystemProperty(String name, String value) {
-    if(name != null && name.length() > 0) {
+    if (name != null && name.length() > 0) {
       sysProperties.put(name, value != null ? value : "");
     }
   }
@@ -134,19 +115,19 @@ public class EclipseJvmLauncher implements JvmLauncher {
   }
 
   public void addAppArgument(File file) {
-    if(file != null) {
+    if (file != null) {
       appArguments.add(file.getAbsolutePath());
     }
   }
 
   public void addAppArguments(String... values) {
-    if(values != null) {
+    if (values != null) {
       Collections.addAll(appArguments, values);
     }
   }
 
   public void addAppArgumentLine(String line) {
-    if(line != null) {
+    if (line != null) {
       Collections.addAll(appArguments, Commandline.translateCommandline(line));
     }
   }
@@ -168,21 +149,17 @@ public class EclipseJvmLauncher implements JvmLauncher {
   }
 
   public void start() throws JvmLauncherException {
-    List<String> jvmArguments = new ArrayList<String>(this.jvmArguments);
-    for(Map.Entry<String, String> entry : sysProperties.entrySet()) {
+    List<String> jvmArguments = new ArrayList<>(this.jvmArguments);
+    for (Map.Entry<String, String> entry : sysProperties.entrySet()) {
       jvmArguments.add("-D" + entry.getKey() + "=" + entry.getValue());
     }
 
     VMRunnerConfiguration config;
-    if(jarFile != null) {
-      /*
-       * NOTE: VMRunnerConfiguration does not really support invocations of the form "java -jar <file>". To workaround
-       * this, we specify "-jar" as the main class feed in the JAR file in the following app arguments. We must not use
-       * the empty string for the main class as this gets interpreted as an empty/missing classname by the java launcher
-       * on Unix-like platforms.
-       */
+    if (jarFile != null) {
+      /* NOTE: VMRunnerConfiguration does not really support invocations of the form "java -jar <file>". To workaround this, we specify "-jar" as the main class feed in the JAR file in the following
+       * app arguments. We must not use the empty string for the main class as this gets interpreted as an empty/missing classname by the java launcher on Unix-like platforms. */
       config = new VMRunnerConfiguration("-jar", toArray(classpath));
-    } else if(mainClass != null && mainClass.length() > 0) {
+    } else if (mainClass != null && mainClass.length() > 0) {
       config = new VMRunnerConfiguration(mainClass, toArray(classpath));
     } else {
       throw new JvmLauncherException("neither main class nor JAR file have been specified");
@@ -192,14 +169,14 @@ public class EclipseJvmLauncher implements JvmLauncher {
     config.setVMArguments(toArray(jvmArguments));
     config.setProgramArguments(prependJarFile(toArray(appArguments), jarFile));
 
-    if(workingDirectory != null) {
+    if (workingDirectory != null) {
       config.setWorkingDirectory(workingDirectory.getAbsolutePath());
       workingDirectory.mkdirs();
     }
 
     try {
       runner.run(config, launch, monitor);
-    } catch(CoreException e) {
+    } catch (CoreException e) {
       throw new JvmLauncherException(e.getMessage(), e);
     }
   }
@@ -209,7 +186,7 @@ public class EclipseJvmLauncher implements JvmLauncher {
   }
 
   private String[] prependJarFile(String[] appArgs, File jarFile) {
-    if(jarFile == null) {
+    if (jarFile == null) {
       return appArgs;
     }
     String[] result = new String[appArgs.length + 1];
@@ -219,7 +196,7 @@ public class EclipseJvmLauncher implements JvmLauncher {
   }
 
   private String[] toArray(Collection<String> coll) {
-    if(coll == null) {
+    if (coll == null) {
       return null;
     }
     return coll.toArray(new String[coll.size()]);
@@ -228,10 +205,10 @@ public class EclipseJvmLauncher implements JvmLauncher {
   /**
    * From cargo 1.4.11, not implemented yet
    */
-	public void kill() {
+  public void kill() {
   }
 
-	/**
+  /**
    * From cargo 1.4.11, not implemented yet
    */
   public void setSpawn(boolean spawn) {

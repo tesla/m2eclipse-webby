@@ -1,53 +1,20 @@
-/*******************************************************************************
- * Copyright (c) 2011 Sonatype, Inc.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
-
 package org.sonatype.m2e.webby.internal.view;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.*;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.*;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.debug.internal.ui.actions.RelaunchActionDelegate;
-import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IMenuListener;
-import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.action.IToolBarManager;
-import org.eclipse.jface.action.MenuManager;
-import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.action.*;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.events.*;
+import org.eclipse.swt.layout.*;
 import org.eclipse.swt.program.Program;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.swt.widgets.TableItem;
-import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
+import org.eclipse.swt.widgets.*;
+import org.eclipse.ui.*;
 import org.eclipse.ui.part.ViewPart;
-import org.sonatype.m2e.webby.internal.IWebApp;
-import org.sonatype.m2e.webby.internal.IWebAppListener;
-import org.sonatype.m2e.webby.internal.WebAppRegistry;
-import org.sonatype.m2e.webby.internal.WebbyImages;
-import org.sonatype.m2e.webby.internal.WebbyPlugin;
+import org.sonatype.m2e.webby.internal.*;
 
-
-
-/**
- */
 public class WebbyView extends ViewPart implements IWebAppListener {
 
   private static final int EXTERNAL_BROWSER_MOD_MASK = SWT.MOD1;
@@ -68,7 +35,7 @@ public class WebbyView extends ViewPart implements IWebAppListener {
 
   public void webAppStarted(final IWebApp webApp) {
     Display display = table.getDisplay();
-    if(display == null) {
+    if (display == null) {
       return;
     }
     display.asyncExec(new Runnable() {
@@ -80,7 +47,7 @@ public class WebbyView extends ViewPart implements IWebAppListener {
 
   public void webAppStopped(final IWebApp webApp) {
     Display display = table.getDisplay();
-    if(display == null) {
+    if (display == null) {
       return;
     }
     display.asyncExec(new Runnable() {
@@ -92,7 +59,7 @@ public class WebbyView extends ViewPart implements IWebAppListener {
 
   private void add(IWebApp webApp) {
     TableItem item = new TableItem(table, SWT.LEFT);
-    if(webApp.getContext().startsWith("/")) {
+    if (webApp.getContext().startsWith("/")) {
       item.setText(0, webApp.getContext());
     } else {
       item.setText(0, "/" + webApp.getContext());
@@ -103,9 +70,9 @@ public class WebbyView extends ViewPart implements IWebAppListener {
   }
 
   private void remove(IWebApp webApp) {
-    for(int i = table.getItemCount() - 1; i >= 0; i-- ) {
+    for (int i = table.getItemCount() - 1; i >= 0; i--) {
       TableItem item = table.getItem(i);
-      if(item.getData() == webApp) {
+      if (item.getData() == webApp) {
         table.remove(i);
       }
     }
@@ -113,7 +80,7 @@ public class WebbyView extends ViewPart implements IWebAppListener {
   }
 
   private void stop() {
-    for(TableItem item : table.getSelection()) {
+    for (TableItem item : table.getSelection()) {
       final IWebApp webApp = (IWebApp) item.getData();
       Job job = new Job("Stopping " + webApp.getContainerId() + ":" + webApp.getPort() + "/" + webApp.getContext()) {
         @Override
@@ -121,7 +88,7 @@ public class WebbyView extends ViewPart implements IWebAppListener {
           try {
             webApp.stop();
             return Status.OK_STATUS;
-          } catch(Exception e) {
+          } catch (Exception e) {
             return WebbyPlugin.newStatus(e.getMessage(), e);
           }
         }
@@ -131,7 +98,7 @@ public class WebbyView extends ViewPart implements IWebAppListener {
   }
 
   private void restart() {
-    for(TableItem item : table.getSelection()) {
+    for (TableItem item : table.getSelection()) {
       final IWebApp webApp = (IWebApp) item.getData();
       Job job = new Job("Restarting " + webApp.getContainerId() + ":" + webApp.getPort() + "/" + webApp.getContext()) {
         @Override
@@ -139,7 +106,7 @@ public class WebbyView extends ViewPart implements IWebAppListener {
           try {
             RelaunchActionDelegate.relaunch(webApp.getLaunch().getLaunchConfiguration(), webApp.getLaunch().getLaunchMode(), true);
             return Status.OK_STATUS;
-          } catch(Exception e) {
+          } catch (Exception e) {
             return WebbyPlugin.newStatus(e.getMessage(), e);
           }
         }
@@ -147,23 +114,24 @@ public class WebbyView extends ViewPart implements IWebAppListener {
       job.schedule();
     }
   }
+
   private void browse(boolean external) {
-    if(table.getSelectionCount() != 1) {
+    if (table.getSelectionCount() != 1) {
       return;
     }
     TableItem item = table.getSelection()[0];
     IWebApp webApp = (IWebApp) item.getData();
     String url = "http://localhost:" + webApp.getPort() + "/" + webApp.getContext();
 
-    if(external) {
+    if (external) {
       Program.launch(url);
     } else {
       String id = "webby-" + webApp.getContext();
       try {
         PlatformUI.getWorkbench().getBrowserSupport().createBrowser(id).openURL(new URL(url));
-      } catch(PartInitException e) {
+      } catch (PartInitException e) {
         WebbyPlugin.log(e);
-      } catch(MalformedURLException e) {
+      } catch (MalformedURLException e) {
         WebbyPlugin.log(e);
       }
     }
@@ -203,7 +171,7 @@ public class WebbyView extends ViewPart implements IWebAppListener {
       }
     });
 
-    for(IWebApp webApp : webAppRegistry.getWebApps()) {
+    for (IWebApp webApp : webAppRegistry.getWebApps()) {
       add(webApp);
     }
 
@@ -271,7 +239,7 @@ public class WebbyView extends ViewPart implements IWebAppListener {
   public void dispose() {
     super.dispose();
 
-    if(webAppRegistry != null) {
+    if (webAppRegistry != null) {
       webAppRegistry.removeListener(this);
     }
   }

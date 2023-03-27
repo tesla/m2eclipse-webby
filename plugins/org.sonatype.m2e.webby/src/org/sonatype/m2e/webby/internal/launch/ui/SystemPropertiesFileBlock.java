@@ -1,35 +1,15 @@
-/*******************************************************************************
- * Copyright (c) 2011 Sonatype, Inc.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
-
 package org.sonatype.m2e.webby.internal.launch.ui;
 
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.debug.core.ILaunchConfiguration;
-import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
+import org.eclipse.debug.core.*;
 import org.eclipse.debug.ui.StringVariableSelectionDialog;
 import org.eclipse.jdt.debug.ui.launchConfigurations.JavaLaunchTab;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.TraverseEvent;
-import org.eclipse.swt.events.TraverseListener;
+import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.layout.*;
+import org.eclipse.swt.widgets.*;
 import org.sonatype.m2e.webby.internal.launch.WebbyLaunchConstants;
-
-
 
 public class SystemPropertiesFileBlock extends JavaLaunchTab {
 
@@ -53,7 +33,7 @@ public class SystemPropertiesFileBlock extends JavaLaunchTab {
     sysPropsFiles = new Text(group, SWT.MULTI | SWT.WRAP | SWT.BORDER | SWT.V_SCROLL);
     sysPropsFiles.addTraverseListener(new TraverseListener() {
       public void keyTraversed(TraverseEvent e) {
-        switch(e.detail) {
+        switch (e.detail) {
           case SWT.TRAVERSE_ESCAPE:
           case SWT.TRAVERSE_PAGE_NEXT:
           case SWT.TRAVERSE_PAGE_PREVIOUS:
@@ -62,10 +42,10 @@ public class SystemPropertiesFileBlock extends JavaLaunchTab {
           case SWT.TRAVERSE_RETURN:
           case SWT.TRAVERSE_TAB_NEXT:
           case SWT.TRAVERSE_TAB_PREVIOUS:
-            if((sysPropsFiles.getStyle() & SWT.SINGLE) != 0) {
+            if ((sysPropsFiles.getStyle() & SWT.SINGLE) != 0) {
               e.doit = true;
             } else {
-              if(!sysPropsFiles.isEnabled() || (e.stateMask & SWT.MODIFIER_MASK) != 0) {
+              if (!sysPropsFiles.isEnabled() || (e.stateMask & SWT.MODIFIER_MASK) != 0) {
                 e.doit = true;
               }
             }
@@ -92,7 +72,7 @@ public class SystemPropertiesFileBlock extends JavaLaunchTab {
         StringVariableSelectionDialog dialog = new StringVariableSelectionDialog(getShell());
         dialog.open();
         String variable = dialog.getVariableExpression();
-        if(variable != null) {
+        if (variable != null) {
           sysPropsFiles.insert(variable);
         }
       }
@@ -108,7 +88,7 @@ public class SystemPropertiesFileBlock extends JavaLaunchTab {
     String sysPropFiles = "";
     try {
       sysPropFiles = config.getAttribute(WebbyLaunchConstants.ATTR_SYS_PROP_FILES, "");
-    } catch(CoreException ce) {
+    } catch (CoreException ce) {
       setErrorMessage(ce.getStatus().getMessage());
     }
     this.sysPropsFiles.setText(sysPropFiles);
@@ -116,7 +96,7 @@ public class SystemPropertiesFileBlock extends JavaLaunchTab {
 
   public void performApply(ILaunchConfigurationWorkingCopy config) {
     String content = sysPropsFiles.getText().trim();
-    if(content.length() <= 0) {
+    if (content.length() <= 0) {
       content = null;
     }
     config.setAttribute(WebbyLaunchConstants.ATTR_SYS_PROP_FILES, content);

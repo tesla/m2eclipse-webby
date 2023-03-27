@@ -1,11 +1,3 @@
-/*******************************************************************************
- * Copyright (c) 2011 Sonatype, Inc.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
-
 package org.sonatype.m2e.webby.internal.launch;
 
 import java.io.*;
@@ -21,6 +13,7 @@ import org.codehaus.cargo.container.jetty.JettyPropertySet;
 import org.codehaus.cargo.container.property.*;
 import org.codehaus.cargo.container.spi.configuration.AbstractStandaloneLocalConfiguration;
 import org.codehaus.cargo.container.tomcat.TomcatPropertySet;
+import org.codehaus.cargo.container.tomcat.internal.AbstractCatalinaStandaloneLocalConfiguration;
 import org.codehaus.cargo.generic.*;
 import org.codehaus.cargo.generic.configuration.*;
 import org.codehaus.cargo.generic.deployable.*;
@@ -36,15 +29,9 @@ import org.eclipse.swt.program.Program;
 import org.eclipse.ui.console.*;
 import org.sonatype.m2e.webby.internal.*;
 import org.sonatype.m2e.webby.internal.config.*;
-import org.sonatype.m2e.webby.internal.launch.boot.EmbeddedServerBooter;
 import org.sonatype.m2e.webby.internal.launch.ui.*;
 import org.sonatype.m2e.webby.internal.util.*;
 
-
-
-/**
- *
- */
 public class WebbyLaunchDelegate extends JavaLaunchDelegate {
 
   @Override
@@ -73,12 +60,11 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
       cargo.setRuntimeClasspath(toClasspath(warClasspath.getRuntimeClasspath()));
       cargo.setProvidedClasspath(toClasspath(warClasspath.getProvidedClasspath()));
       cargo.setContextName(configuration.getAttribute(WebbyLaunchConstants.ATTR_CONTEXT_NAME, ""));
-      if(cargo.getContextName().length() <= 0) {
+      if (cargo.getContextName().length() <= 0) {
         cargo.setContextName(mvnProject.getArtifactId());
       }
-      cargo.setContainerId(configuration.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_ID, "jetty7x"));
-      cargo.setContainerType(ContainerType.toType(configuration.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_TYPE,
-          "embedded")));
+      cargo.setContainerId(configuration.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_ID, "tomcat10x"));
+      cargo.setContainerType(ContainerType.INSTALLED);
       cargo.setContainerHome(configuration.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_HOME, ""));
       cargo.setContainerHome(expandVariables(cargo.getContainerHome()));
       cargo.setConfigHome(new File(workDir, "container").getAbsolutePath());
@@ -86,12 +72,12 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
       cargo.setLogLevel(configuration.getAttribute(WebbyLaunchConstants.ATTR_LOG_LEVEL, "medium"));
       try {
         cargo.setPort(Integer.toString(configuration.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_PORT, 8080)));
-      } catch(CoreException e) {
+      } catch (CoreException e) {
         cargo.setPort(configuration.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_PORT, "8080"));
       }
       cargo.setTimeout(configuration.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_TIMEOUT, 60) * 1000);
 
-      if(!cargo.getWarDirectory().exists()) {
+      if (!cargo.getWarDirectory().exists()) {
         throw WebbyPlugin.newError("WAR base directory " + cargo.getWarDirectory()
             + " does not exist, please ensure your workspace is refreshed and has been built", null);
       }
@@ -101,34 +87,30 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
 
       MessageConsoleStream mcs = console.newMessageStream();
       mcs.println("Runtime classpath:");
-      for(File file : warClasspath.getRuntimeClasspath()) {
+      for (File file : warClasspath.getRuntimeClasspath()) {
         mcs.println("  " + file);
       }
       mcs.println("Provided classpath:");
-      for(File file : warClasspath.getProvidedClasspath()) {
+      for (File file : warClasspath.getProvidedClasspath()) {
         mcs.println("  " + file);
       }
       try {
         mcs.close();
-      } catch(IOException e) {
+      } catch (IOException e) {
         WebbyPlugin.log(e);
       }
 
       IWebApp webApp;
 
-      if(ContainerType.EMBEDDED.equals(cargo.getContainerType())) {
-        webApp = launchEmbedded(cargo, configuration, mode, launch, pm.newChild(40));
-      } else {
-        webApp = launchInstalled(cargo, configuration, mode, launch, pm.newChild(40));
-      }
-      if(!launch.isTerminated()) {
+      webApp = launchInstalled(cargo, configuration, mode, launch, pm.newChild(40));
+      if (!launch.isTerminated()) {
         if (configuration.getAttribute(WebbyLaunchConstants.ATTR_OPEN_WHEN_STARTED, true)) {
           Program.launch("http://localhost:" + webApp.getPort() + "/" + webApp.getContext());
         }
         WebbyPlugin.getDefault().getWebAppRegistry().addWebApp(webApp);
       }
     } finally {
-      if(monitor != null) {
+      if (monitor != null) {
         monitor.done();
       }
     }
@@ -143,10 +125,10 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
 
     Properties sysProps = loadSystemProperties(sysPropFiles);
 
-    for(Map.Entry<?, ?> entry : sysProps.entrySet()) {
+    for (Map.Entry<?, ?> entry : sysProps.entrySet()) {
       String key = entry.getKey().toString();
       String val = entry.getValue().toString();
-      if(key.indexOf(' ') < 0 && val.indexOf(' ') < 0) {
+      if (key.indexOf(' ') < 0 && val.indexOf(' ') < 0) {
         args.append(" -D").append(key).append('=').append(val);
       } else {
         args.append(" \"-D").append(key).append('=').append(val).append("\"");
@@ -159,15 +141,15 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
   private Properties loadSystemProperties(String sysPropFiles) throws CoreException {
     Properties sysProps = new Properties();
 
-    if(sysPropFiles != null) {
+    if (sysPropFiles != null) {
       String[] lines = sysPropFiles.split("[\r\n]+");
-      for(String line : lines) {
+      for (String line : lines) {
         line = line.trim();
-        if(line.length() <= 0) {
+        if (line.length() <= 0) {
           continue;
         }
         File propFile = new File(line).getAbsoluteFile();
-        if(propFile.isFile()) {
+        if (propFile.isFile()) {
           try {
             FileInputStream is = new FileInputStream(propFile);
             try {
@@ -175,7 +157,7 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
             } finally {
               is.close();
             }
-          } catch(IOException e) {
+          } catch (IOException e) {
             throw WebbyPlugin.newError("Failed to read system properties from " + propFile, e);
           }
         } else {
@@ -195,7 +177,7 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
     String[] envVariables = getEnvironment(configuration);
 
     File javaHome = vm.getInstallLocation();
-    if(new File(javaHome, "jre").isDirectory()) {
+    if (new File(javaHome, "jre").isDirectory()) {
       javaHome = new File(javaHome, "jre");
     }
 
@@ -217,17 +199,17 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
       config.setProperty(GeneralPropertySet.RMI_PORT, portRMI);
 
       DeployableFactory depFactory = new DefaultDeployableFactory();
-      WAR dep = (WAR) depFactory.createDeployable(cargo.getContainerId(),  PathSelector.normalizePath(cargo.getWarDirectory().getAbsolutePath()),
+      WAR dep = (WAR) depFactory.createDeployable(cargo.getContainerId(), PathSelector.normalizePath(cargo.getWarDirectory().getAbsolutePath()),
           DeployableType.WAR);
-      if(cargo.getContextName().length() > 0) {
+      if (cargo.getContextName().length() > 0) {
         dep.setContext(cargo.getContextName());
       }
       dep.setExtraClasspath(cargo.getRuntimeClasspath());
 
       LocalConfiguration localConfig = (LocalConfiguration) config;
       localConfig.addDeployable(dep);
-      if(configuration.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_DISABLE_WS_SCI, true) && localConfig instanceof AbstractStandaloneLocalConfiguration) {
-        AbstractStandaloneLocalConfiguration abstractStandaloneLocalConfiguration = (AbstractStandaloneLocalConfiguration) localConfig;
+      if (configuration.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_DISABLE_WS_SCI, true) && localConfig instanceof AbstractCatalinaStandaloneLocalConfiguration) {
+        AbstractCatalinaStandaloneLocalConfiguration abstractStandaloneLocalConfiguration = (AbstractCatalinaStandaloneLocalConfiguration) localConfig;
         abstractStandaloneLocalConfiguration.addXmlReplacement("conf/server.xml", "//Server/Service/Engine/Host/Context", "containerSciFilter", "WsSci", ReplacementBehavior.IGNORE_IF_NON_EXISTING);
       }
 
@@ -245,7 +227,7 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
       localContainer.start();
 
       return new InstalledContainerWebApp(launch, cargo, localContainer);
-    } catch(CargoException e) {
+    } catch (CargoException e) {
       throw WebbyPlugin.newError("Failed to start container", e);
     }
   }
@@ -256,55 +238,13 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
     return Integer.toString(portToInt);
   }
 
-  private IWebApp launchEmbedded(CargoConfiguration cargo, ILaunchConfiguration configuration, String mode,
-      ILaunch launch, IProgressMonitor monitor) throws CoreException {
-
-    File classpathFile;
-    try {
-      StringBuilder buffer = new StringBuilder(1024);
-      buffer.append(".");
-      for(String path : cargo.getRuntimeClasspath()) {
-        buffer.append(File.pathSeparator).append(path);
-      }
-
-      classpathFile = File.createTempFile("m2e-webby-", ".classpath");
-      FileOutputStream os = new FileOutputStream(classpathFile);
-      try {
-        os.write(buffer.toString().getBytes("UTF-8"));
-      } finally {
-        os.close();
-      }
-    } catch(IOException e) {
-      throw WebbyPlugin.newError("Failed to write WAR classpath to temp file", e);
-    }
-
-    int controlPort = SocketUtil.findFreePort();
-
-    VMRunnerConfiguration config = new VMRunnerConfiguration(EmbeddedServerBooter.class.getName(),
-        getEmbeddeClasspath(cargo.getContainerId()));
-    if(cargo.getWorkDirectory() != null) {
-      config.setWorkingDirectory(cargo.getWorkDirectory().getAbsolutePath());
-    }
-    config.setEnvironment(getEnvironment(configuration));
-    config.setVMArguments(DebugPlugin.parseArguments(getVmArgs(configuration)));
-    config.setProgramArguments(new String[] {Integer.toString(controlPort), cargo.getContainerId(),
-        cargo.getContainerType().getType(), cargo.getConfigHome(), cargo.getConfigType().getType(), cargo.getPort(),
-        cargo.getLogLevel(), PathSelector.normalizePath(cargo.getWarDirectory().getAbsolutePath()), Long.toString(cargo.getTimeout()),
-        "@" + PathSelector.normalizePath(classpathFile.getAbsolutePath()), cargo.getContextName()});
-
-    IVMRunner runner = getVMRunner(configuration, mode);
-    runner.run(config, launch, monitor);
-
-    return new EmbeddedContainerWebApp(launch, cargo, controlPort);
-  }
-
   private String[] getEmbeddeClasspath(String containerId) throws CoreException {
     List<String> paths = new ArrayList<String>();
     try {
       File webbyJar = FileLocator.getBundleFile(WebbyPlugin.getDefault().getBundle());
-      if(webbyJar.isDirectory()) {
+      if (webbyJar.isDirectory()) {
         File classesDir = new File(webbyJar, "target/classes");
-        if(classesDir.isDirectory()) {
+        if (classesDir.isDirectory()) {
           webbyJar = classesDir;
         }
       }
@@ -313,7 +253,7 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
       addJars(paths, "jars/cargo");
 
       addJars(paths, "jars/" + containerId);
-    } catch(Exception e) {
+    } catch (Exception e) {
       throw WebbyPlugin.newError("Failed to create container classpath", e);
     }
     return paths.toArray(new String[paths.size()]);
@@ -321,8 +261,8 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
 
   @SuppressWarnings("unchecked")
   private void addJars(List<String> paths, String basePath) throws Exception {
-    for(URL url : Collections.list((Enumeration<URL>) WebbyPlugin.getDefault().getBundle()
-        .findEntries(basePath, "*.jar", true))) {
+    for (URL url : Collections.list((Enumeration<URL>) WebbyPlugin.getDefault().getBundle()
+                                                                  .findEntries(basePath, "*.jar", true))) {
       url = FileLocator.toFileURL(url);
       paths.add(toFile(url).getAbsolutePath());
     }
@@ -331,11 +271,11 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
   private File toFile(URL url) {
     try {
       return new File(url.toURI());
-    } catch(URISyntaxException e) {
+    } catch (URISyntaxException e) {
       // seen even in Eclipse 3.7 that FileLocator returns URLs with spaces so try harder
       try {
         return new File(new URI("file", null, url.getPath(), null));
-      } catch(URISyntaxException e1) {
+      } catch (URISyntaxException e1) {
         return new File(url.getPath());
       }
     }
@@ -344,9 +284,9 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
   private String[] toClasspath(Collection<File> files) {
     String[] classpath = new String[files.size()];
     int i = 0;
-    for(File file : files) {
+    for (File file : files) {
       classpath[i] = PathSelector.normalizePath(file.getAbsolutePath());
-      i++ ;
+      i++;
     }
     return classpath;
   }

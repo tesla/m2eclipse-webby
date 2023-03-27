@@ -1,38 +1,15 @@
-/*******************************************************************************
- * Copyright (c) 2011 Sonatype, Inc.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
-
 package org.sonatype.m2e.webby.internal.launch.ui;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.SortedSet;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 
 import org.codehaus.cargo.container.ContainerType;
 import org.codehaus.cargo.generic.DefaultContainerFactory;
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.debug.core.ILaunchConfiguration;
-import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
+import org.eclipse.debug.core.*;
 import org.eclipse.debug.internal.ui.SWTFactory;
 import org.eclipse.debug.ui.StringVariableSelectionDialog;
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IJavaModel;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.*;
 import org.eclipse.jdt.debug.ui.launchConfigurations.JavaLaunchTab;
 import org.eclipse.jdt.internal.debug.ui.launcher.LauncherMessages;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
@@ -41,29 +18,18 @@ import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.DirectoryDialog;
-import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Spinner;
-import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.layout.*;
+import org.eclipse.swt.widgets.*;
 import org.eclipse.ui.dialogs.ElementListSelectionDialog;
-import org.sonatype.m2e.webby.internal.WebbyImages;
-import org.sonatype.m2e.webby.internal.WebbyPlugin;
+import org.sonatype.m2e.webby.internal.*;
 import org.sonatype.m2e.webby.internal.launch.WebbyLaunchConstants;
 
-
-
-/**
- */
 @SuppressWarnings("restriction")
 public class WebbyTab extends JavaLaunchTab {
+
+  private static final Set<String> SUPPORTED_SERVERS = Set.of("jetty9x", "jetty10x", "jetty11x", "tomcat8x", "tomcat9x", "tomcat10x", "tomcat11x", "tomee8x", "tomee9x", "glassfish5x",
+      "glassfish6x", "glassfish7x");
 
   private Text projectName;
 
@@ -130,7 +96,7 @@ public class WebbyTab extends JavaLaunchTab {
     projectNameBrowse.addSelectionListener(new SelectionAdapter() {
       public void widgetSelected(SelectionEvent e) {
         IJavaProject project = chooseJavaProject();
-        if(project != null) {
+        if (project != null) {
           projectName.setText(project.getElementName());
         }
       }
@@ -169,28 +135,20 @@ public class WebbyTab extends JavaLaunchTab {
     });
   }
 
-  private boolean isEmbeddedContainerInstalled(String containerId) {
-    return WebbyPlugin.getDefault().isEmbeddedContainerInstalled(containerId);
-  }
-
   private void createContainerEditor(Composite parent) {
-    Set<String> supported = new HashSet<String>(Arrays.asList("jetty6x", "jetty7x", "jetty8x", "tomcat5x", "tomcat6x",
-        "tomcat7x", "tomcat8x", "tomcat9x", "tomcat10x", "tomee1x", "tomee7x"));
     containers = new TreeMap<String, SortedSet<String>>();
-    for(Map.Entry<String, Set<ContainerType>> entry : new DefaultContainerFactory().getContainerIds().entrySet()) {
-      if(!supported.contains(entry.getKey())) {
+    for (Map.Entry<String, Set<ContainerType>> entry : new DefaultContainerFactory().getContainerIds().entrySet()) {
+      if (!SUPPORTED_SERVERS.contains(entry.getKey())) {
         continue;
       }
-      SortedSet<String> types = new TreeSet<String>();
-      for(ContainerType type : entry.getValue()) {
-        if(ContainerType.REMOTE.equals(type)) {
-          continue;
-        } else if(ContainerType.EMBEDDED.equals(type) && !isEmbeddedContainerInstalled(entry.getKey())) {
+      SortedSet<String> types = new TreeSet<>();
+      for (ContainerType type : entry.getValue()) {
+        if (ContainerType.REMOTE.equals(type) || ContainerType.EMBEDDED.equals(type)) {
           continue;
         }
         types.add(type.getType());
       }
-      if(!types.isEmpty()) {
+      if (!types.isEmpty()) {
         containers.put(entry.getKey(), types);
       }
     }
@@ -208,7 +166,7 @@ public class WebbyTab extends JavaLaunchTab {
     containerId = new Combo(group, SWT.VERTICAL | SWT.DROP_DOWN | SWT.BORDER | SWT.READ_ONLY);
     containerId.setFont(font);
     containerId.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 4, 1));
-    for(String id : containers.keySet()) {
+    for (String id : containers.keySet()) {
       containerId.add(id);
     }
     containerId.addSelectionListener(new SelectionAdapter() {
@@ -250,7 +208,7 @@ public class WebbyTab extends JavaLaunchTab {
         StringVariableSelectionDialog dialog = new StringVariableSelectionDialog(getShell());
         dialog.open();
         String variable = dialog.getVariableExpression();
-        if(variable != null) {
+        if (variable != null) {
           containerHome.insert(variable);
         }
       }
@@ -262,7 +220,7 @@ public class WebbyTab extends JavaLaunchTab {
 
       public void widgetSelected(SelectionEvent e) {
         String path = chooseContainerHome();
-        if(path != null) {
+        if (path != null) {
           containerHome.setText(path);
         }
       }
@@ -359,15 +317,15 @@ public class WebbyTab extends JavaLaunchTab {
     Set<String> types = containers.get(containerId.getText());
     String sel = containerType.getText();
     containerType.removeAll();
-    if(types != null) {
-      for(String type : types) {
+    if (types != null) {
+      for (String type : types) {
         containerType.add(type);
-        if(type.equals(sel)) {
+        if (type.equals(sel)) {
           containerType.select(containerType.getItemCount() - 1);
         }
       }
     }
-    if(containerType.getSelectionIndex() < 0) {
+    if (containerType.getSelectionIndex() < 0) {
       containerType.select(0);
     }
     updateContainerHome();
@@ -389,14 +347,14 @@ public class WebbyTab extends JavaLaunchTab {
     dialog.setMessage(LauncherMessages.AbstractJavaMainTab_3);
     try {
       dialog.setElements(JavaCore.create(getWorkspaceRoot()).getJavaProjects());
-    } catch(JavaModelException jme) {
+    } catch (JavaModelException jme) {
       WebbyPlugin.log(jme);
     }
     IJavaProject javaProject = getJavaProject();
-    if(javaProject != null) {
-      dialog.setInitialSelections(new Object[] {javaProject});
+    if (javaProject != null) {
+      dialog.setInitialSelections(new Object[] { javaProject });
     }
-    if(dialog.open() == Window.OK) {
+    if (dialog.open() == Window.OK) {
       return (IJavaProject) dialog.getFirstResult();
     }
     return null;
@@ -404,7 +362,7 @@ public class WebbyTab extends JavaLaunchTab {
 
   private IJavaProject getJavaProject() {
     String projectName = this.projectName.getText().trim();
-    if(projectName.length() <= 0) {
+    if (projectName.length() <= 0) {
       return null;
     }
     return getJavaModel().getJavaProject(projectName);
@@ -428,14 +386,13 @@ public class WebbyTab extends JavaLaunchTab {
 
   public void setDefaults(ILaunchConfigurationWorkingCopy config) {
     IJavaElement javaElement = getContext();
-    if(javaElement != null) {
+    if (javaElement != null) {
       initializeJavaProject(javaElement, config);
     } else {
       config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, "");
     }
     config.setAttribute(WebbyLaunchConstants.ATTR_CONTEXT_NAME, "");
-    config.setAttribute(WebbyLaunchConstants.ATTR_CONTAINER_ID, "jetty7x");
-    config.setAttribute(WebbyLaunchConstants.ATTR_CONTAINER_TYPE, ContainerType.EMBEDDED.getType());
+    config.setAttribute(WebbyLaunchConstants.ATTR_CONTAINER_ID, "tomcat10x");
     config.setAttribute(WebbyLaunchConstants.ATTR_CONTAINER_HOME, "");
     config.setAttribute(WebbyLaunchConstants.ATTR_LOG_LEVEL, "medium");
   }
@@ -445,7 +402,7 @@ public class WebbyTab extends JavaLaunchTab {
     String projectName = "";
     try {
       projectName = config.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, "");
-    } catch(CoreException ce) {
+    } catch (CoreException ce) {
       setErrorMessage(ce.getStatus().getMessage());
     }
     this.projectName.setText(projectName);
@@ -453,7 +410,7 @@ public class WebbyTab extends JavaLaunchTab {
     String contextName = "";
     try {
       contextName = config.getAttribute(WebbyLaunchConstants.ATTR_CONTEXT_NAME, "");
-    } catch(CoreException ce) {
+    } catch (CoreException ce) {
       setErrorMessage(ce.getStatus().getMessage());
     }
     this.contextName.setText(contextName);
@@ -461,25 +418,16 @@ public class WebbyTab extends JavaLaunchTab {
     String containerId = "";
     try {
       containerId = config.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_ID, "");
-    } catch(CoreException ce) {
+    } catch (CoreException ce) {
       setErrorMessage(ce.getStatus().getMessage());
     }
     select(this.containerId, containerId, "jetty7x");
     updateContainerTypes();
 
-    String containerType = "";
-    try {
-      containerType = config.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_TYPE, "");
-    } catch(CoreException ce) {
-      setErrorMessage(ce.getStatus().getMessage());
-    }
-    select(this.containerType, containerType, "installed");
-    updateContainerHome();
-
     String containerHome = "";
     try {
       containerHome = config.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_HOME, "");
-    } catch(CoreException ce) {
+    } catch (CoreException ce) {
       setErrorMessage(ce.getStatus().getMessage());
     }
     this.containerHome.setText(containerHome);
@@ -487,7 +435,7 @@ public class WebbyTab extends JavaLaunchTab {
     String logLevel = "";
     try {
       logLevel = config.getAttribute(WebbyLaunchConstants.ATTR_LOG_LEVEL, "");
-    } catch(CoreException ce) {
+    } catch (CoreException ce) {
       setErrorMessage(ce.getStatus().getMessage());
     }
     select(this.containerLogging, logLevel, "medium");
@@ -495,12 +443,12 @@ public class WebbyTab extends JavaLaunchTab {
     int containerPort = 8080;
     try {
       containerPort = config.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_PORT, 8080);
-    } catch(CoreException ce) {
+    } catch (CoreException ce) {
       try {
         containerPort = Integer.parseInt(config.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_PORT, "8080"));
-      } catch(CoreException nce) {
+      } catch (CoreException nce) {
         setErrorMessage(ce.getStatus().getMessage());
-      } catch(NumberFormatException e) {
+      } catch (NumberFormatException e) {
         // just stick to the default value
       }
     }
@@ -509,12 +457,12 @@ public class WebbyTab extends JavaLaunchTab {
     int containerTimeout = 60;
     try {
       containerTimeout = config.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_TIMEOUT, 60);
-    } catch(CoreException ce) {
+    } catch (CoreException ce) {
       try {
-      containerTimeout = Integer.parseInt(config.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_TIMEOUT, "60"));
-      } catch(CoreException nce) {
+        containerTimeout = Integer.parseInt(config.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_TIMEOUT, "60"));
+      } catch (CoreException nce) {
         setErrorMessage(ce.getStatus().getMessage());
-      } catch(NumberFormatException e) {
+      } catch (NumberFormatException e) {
         // just stick to the default value
       }
     }
@@ -523,7 +471,7 @@ public class WebbyTab extends JavaLaunchTab {
     boolean disableWsSci = true;
     try {
       disableWsSci = config.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_DISABLE_WS_SCI, true);
-    } catch(CoreException ce) {
+    } catch (CoreException ce) {
       setErrorMessage(ce.getStatus().getMessage());
     }
     this.containerDisableWsSci.setSelection(disableWsSci);
@@ -531,7 +479,7 @@ public class WebbyTab extends JavaLaunchTab {
     boolean openWhenStarted = true;
     try {
       openWhenStarted = config.getAttribute(WebbyLaunchConstants.ATTR_OPEN_WHEN_STARTED, true);
-    } catch(CoreException ce) {
+    } catch (CoreException ce) {
       setErrorMessage(ce.getStatus().getMessage());
     }
     this.openWhenStarted.setSelection(openWhenStarted);
@@ -541,10 +489,10 @@ public class WebbyTab extends JavaLaunchTab {
 
   private void select(Combo combo, String value, String fallback) {
     int index = combo.indexOf(value);
-    if(index < 0 && fallback != null) {
+    if (index < 0 && fallback != null) {
       index = combo.indexOf(fallback);
     }
-    if(index >= 0) {
+    if (index >= 0) {
       combo.select(index);
     }
   }
@@ -555,7 +503,6 @@ public class WebbyTab extends JavaLaunchTab {
     config.setAttribute(WebbyLaunchConstants.ATTR_CONTEXT_NAME, contextName.getText().trim());
     config.setAttribute(WebbyLaunchConstants.ATTR_OPEN_WHEN_STARTED, openWhenStarted.getSelection());
     config.setAttribute(WebbyLaunchConstants.ATTR_CONTAINER_ID, containerId.getText().trim());
-    config.setAttribute(WebbyLaunchConstants.ATTR_CONTAINER_TYPE, containerType.getText().trim());
     config.setAttribute(WebbyLaunchConstants.ATTR_CONTAINER_HOME, containerHome.getText().trim());
     config.setAttribute(WebbyLaunchConstants.ATTR_LOG_LEVEL, containerLogging.getText().trim());
     config.setAttribute(WebbyLaunchConstants.ATTR_CONTAINER_PORT, containerPort.getSelection());
@@ -563,11 +510,11 @@ public class WebbyTab extends JavaLaunchTab {
     config.setAttribute(WebbyLaunchConstants.ATTR_CONTAINER_DISABLE_WS_SCI, containerDisableWsSci.getSelection());
 
     IProject project = null;
-    if(projectName.length() > 0) {
+    if (projectName.length() > 0) {
       project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
     }
-    if(project != null) {
-      config.setMappedResources(new IResource[] {project});
+    if (project != null) {
+      config.setMappedResources(new IResource[] { project });
     } else {
       config.setMappedResources(null);
     }

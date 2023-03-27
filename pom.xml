@@ -1,13 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!--
- ~ Copyright (c) 2011 Sonatype, Inc.
- ~ All rights reserved. This program and the accompanying materials
- ~ are made available under the terms of the Eclipse Public License v1.0
- ~ which accompanies this distribution, and is available at
- ~   http://www.eclipse.org/legal/epl-v10.html
--->
-
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
@@ -19,8 +11,8 @@
   <properties>
     <repositoryPathId>m2eclipse-webby</repositoryPathId>
     <p2MetadataName>M2E Webby Connector</p2MetadataName>
-    <tycho.version>3.0.3</tycho.version>
-    <eclipse-repo.url>http://download.eclipse.org/releases/2022-12</eclipse-repo.url>
+    <tycho.version>3.0.4</tycho.version>
+    <eclipse-repo.url>http://download.eclipse.org/releases/2023-03</eclipse-repo.url>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
@@ -87,6 +79,29 @@
           <forkedProcessTimeoutInSeconds>7200</forkedProcessTimeoutInSeconds>
         </configuration>
       </plugin>
+	  <plugin>
+		<groupId>dev.jbang</groupId>
+		<artifactId>jbang-maven-plugin</artifactId>
+		<version>0.0.7</version>
+		<executions>
+		  <execution>
+			<id>run</id>
+			<phase>package</phase>
+			<goals>
+			  <goal>run</goal>
+			</goals>
+			  <configuration>
+				<script>https://gist.github.com/fbricon/3c718d03f55c3ceba5dea570af4af5f8</script>
+				<args>
+					<arg>${project.basedir}</arg>
+				</args>
+				<trusts>
+					<trust>https://gist.github.com</trust>
+				</trusts>
+			  </configuration>
+		  </execution>
+		</executions>
+	  </plugin>
     </plugins>
   </build>
 </project>

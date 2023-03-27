@@ -1,39 +1,24 @@
-/*******************************************************************************
- * Copyright (c) 2011 Sonatype, Inc.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
-
 package org.sonatype.m2e.webby.internal.util;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import org.codehaus.plexus.util.DirectoryScanner;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IResourceDelta;
-import org.eclipse.core.resources.IResourceDeltaVisitor;
+import org.eclipse.core.resources.*;
 import org.eclipse.core.runtime.CoreException;
 
-
-/**
- */
 public class PathCollector {
 
   private final DirectoryScannerEx scanner;
 
   public PathCollector(List<String> includes, List<String> excludes) {
     scanner = new DirectoryScannerEx();
-    if(includes != null && !includes.isEmpty()) {
+    if (includes != null && !includes.isEmpty()) {
       scanner.setIncludes(includes.toArray(new String[includes.size()]));
     } else {
-      scanner.setIncludes(new String[] {"**"});
+      scanner.setIncludes(new String[] { "**" });
     }
-    if(excludes != null) {
+    if (excludes != null) {
       scanner.setExcludes(excludes.toArray(new String[excludes.size()]));
     } else {
       scanner.setExcludes(new String[0]);
@@ -48,7 +33,7 @@ public class PathCollector {
 
   public String[] collectFiles(File basedir) {
     String[] files;
-    if(!basedir.isDirectory()) {
+    if (!basedir.isDirectory()) {
       files = new String[0];
     } else {
       scanner.setBasedir(basedir);
@@ -60,38 +45,34 @@ public class PathCollector {
   }
 
   public String[][] collectFiles(IResourceDelta resDelta) {
-    if(resDelta == null) {
+    if (resDelta == null) {
       return new String[2][0];
     }
 
     final int baseSegments = resDelta.getFullPath().segmentCount();
 
-    final List<String> included = new ArrayList<String>();
-    final List<String> deleted = new ArrayList<String>();
+    final List<String> included = new ArrayList<>();
+    final List<String> deleted = new ArrayList<>();
 
     try {
-      resDelta.accept(new IResourceDeltaVisitor() {
+      resDelta.accept(delta -> {
+        String path = delta.getFullPath().removeFirstSegments(baseSegments).toOSString();
 
-        public boolean visit(IResourceDelta delta) {
-          String path = delta.getFullPath().removeFirstSegments(baseSegments).toOSString();
+        boolean recurse = false;
 
-          boolean recurse = false;
-
-          if(delta.getResource().getType() != IResource.FILE) {
-            recurse = scanner.couldHoldIncluded(path);
-          } else if(scanner.isSelected(path)) {
-            if(delta.getKind() == IResourceDelta.CHANGED || delta.getKind() == IResourceDelta.ADDED) {
-              included.add(path);
-            } else if(delta.getKind() == IResourceDelta.REMOVED) {
-              deleted.add(path);
-            }
+        if (delta.getResource().getType() != IResource.FILE) {
+          recurse = scanner.couldHoldIncluded(path);
+        } else if (scanner.isSelected(path)) {
+          if (delta.getKind() == IResourceDelta.CHANGED || delta.getKind() == IResourceDelta.ADDED) {
+            included.add(path);
+          } else if (delta.getKind() == IResourceDelta.REMOVED) {
+            deleted.add(path);
           }
-
-          return recurse;
         }
 
+        return recurse;
       });
-    } catch(CoreException e) {
+    } catch (CoreException e) {
       throw new IllegalStateException(e);
     }
 
@@ -139,7 +120,7 @@ public class PathCollector {
 
     @Override
     public void setupMatchPatterns() {
-    	super.setupMatchPatterns();
+      super.setupMatchPatterns();
     }
   }
 

@@ -1,28 +1,8 @@
-/*******************************************************************************
- * Copyright (c) 2011 Sonatype, Inc.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
-
 package org.sonatype.m2e.webby.internal.util;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
 
-
-/**
- */
 public class ResourceRegistry {
 
   private static int[] EMPTY = {};
@@ -30,7 +10,7 @@ public class ResourceRegistry {
   private Map<String, Object> resources;
 
   public ResourceRegistry() {
-    this(new HashMap<String, Object>());
+    this(new HashMap<>());
   }
 
   private ResourceRegistry(Map<String, Object> resources) {
@@ -49,26 +29,26 @@ public class ResourceRegistry {
     resourceName = normalizePath(resourceName);
     Object ordinals = resources.get(resourceName);
 
-    if(ordinals == null) {
+    if (ordinals == null) {
       resources.put(resourceName, Integer.valueOf(overlayOrdinal));
       accept = true;
-    } else if(ordinals instanceof Number) {
+    } else if (ordinals instanceof Number) {
       int existing = ((Number) ordinals).intValue();
-      if(overlayOrdinal == existing) {
+      if (overlayOrdinal == existing) {
         accept = true;
-      } else if(overlayOrdinal < existing) {
+      } else if (overlayOrdinal < existing) {
         accept = true;
-        resources.put(resourceName, new int[] {overlayOrdinal, existing});
+        resources.put(resourceName, new int[] { overlayOrdinal, existing });
       } else {
         accept = false;
-        resources.put(resourceName, new int[] {existing, overlayOrdinal});
+        resources.put(resourceName, new int[] { existing, overlayOrdinal });
       }
     } else {
       int[] existing = (int[]) ordinals;
       int index = Arrays.binarySearch(existing, overlayOrdinal);
-      if(index == 0) {
+      if (index == 0) {
         accept = true;
-      } else if(index > 0) {
+      } else if (index > 0) {
         accept = false;
       } else {
         index = -index - 1;
@@ -88,11 +68,11 @@ public class ResourceRegistry {
     resourceName = normalizePath(resourceName);
     Object ordinals = resources.get(resourceName);
 
-    if(ordinals == null) {
+    if (ordinals == null) {
       return null;
-    } else if(ordinals instanceof Number) {
+    } else if (ordinals instanceof Number) {
       int existing = ((Number) ordinals).intValue();
-      if(existing == overlayOrdinal) {
+      if (existing == overlayOrdinal) {
         resources.remove(resourceName);
         return EMPTY;
       } else {
@@ -101,16 +81,16 @@ public class ResourceRegistry {
     } else {
       int[] existing = (int[]) ordinals;
       int index = Arrays.binarySearch(existing, overlayOrdinal);
-      if(index < 0) {
+      if (index < 0) {
         return null;
       }
-      if(existing.length == 1) {
+      if (existing.length == 1) {
         resources.remove(resourceName);
         return EMPTY;
-      } else if(existing.length == 2) {
+      } else if (existing.length == 2) {
         int remaining = existing[existing.length - index - 1];
         resources.put(resourceName, Integer.valueOf(remaining));
-        return new int[] {remaining};
+        return new int[] { remaining };
       } else {
         int[] tmp = new int[existing.length - 1];
         System.arraycopy(existing, 0, tmp, 0, index);
@@ -140,12 +120,12 @@ public class ResourceRegistry {
       ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(fis));
       Object resources = ois.readObject();
       ois.close();
-      if(resources instanceof Map) {
+      if (resources instanceof Map) {
         return new ResourceRegistry((Map<String, Object>) resources);
       } else {
         throw new IOException("Corrupted object stream");
       }
-    } catch(ClassNotFoundException e) {
+    } catch (ClassNotFoundException e) {
       throw (IOException) new IOException("Corrupted object stream").initCause(e);
     } finally {
       fis.close();

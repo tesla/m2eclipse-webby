@@ -1,28 +1,8 @@
-/*******************************************************************************
- * Copyright (c) 2011 Sonatype, Inc.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
-
 package org.sonatype.m2e.webby.internal.config;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.*;
+import java.util.*;
 
-
-/**
- */
 public class WarConfiguration implements Serializable {
 
   private static final long serialVersionUID = -3252093653638950999L;
@@ -72,7 +52,7 @@ public class WarConfiguration implements Serializable {
   }
 
   public String getWarDirectory() {
-    if(workDirectory == null) {
+    if (workDirectory == null) {
       return null;
     }
     return new File(workDirectory, "war").getPath();
@@ -170,10 +150,10 @@ public class WarConfiguration implements Serializable {
 
   @Override
   public boolean equals(Object obj) {
-    if(this == obj) {
+    if (this == obj) {
       return true;
     }
-    if(!(obj instanceof WarConfiguration)) {
+    if (!(obj instanceof WarConfiguration)) {
       return false;
     }
     WarConfiguration that = (WarConfiguration) obj;
@@ -226,12 +206,12 @@ public class WarConfiguration implements Serializable {
       ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(fis));
       Object warConfig = ois.readObject();
       ois.close();
-      if(warConfig instanceof WarConfiguration) {
+      if (warConfig instanceof WarConfiguration) {
         return (WarConfiguration) warConfig;
       } else {
         throw new IOException("Corrupted object stream");
       }
-    } catch(ClassNotFoundException e) {
+    } catch (ClassNotFoundException e) {
       throw (IOException) new IOException("Corrupted object stream").initCause(e);
     } finally {
       fis.close();

@@ -1,23 +1,11 @@
-/*******************************************************************************
- * Copyright (c) 2011 Sonatype, Inc.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
-
 package org.sonatype.m2e.webby.internal.util;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 
 import org.codehaus.plexus.util.SelectorUtils;
 
-
-/**
- */
 public class PathSelector {
 
   private final String[] includes;
@@ -32,9 +20,9 @@ public class PathSelector {
   private static String[] normalizePatterns(List<String> patterns) {
     String[] normalized;
 
-    if(patterns != null) {
+    if (patterns != null) {
       normalized = new String[patterns.size()];
-      for(int i = patterns.size() - 1; i >= 0; i-- ) {
+      for (int i = patterns.size() - 1; i >= 0; i--) {
         normalized[i] = normalizePattern(patterns.get(i));
       }
     } else {
@@ -45,13 +33,13 @@ public class PathSelector {
   }
 
   private static String normalizePattern(String pattern) {
-    if(pattern == null) {
+    if (pattern == null) {
       return "";
     }
 
     String normalized = normalizePath(pattern);
 
-    if(normalized.endsWith(File.separator)) {
+    if (normalized.endsWith(File.separator)) {
       normalized += "**";
     }
 
@@ -64,19 +52,19 @@ public class PathSelector {
 
   public boolean isSelected(String pathname) {
     String normalized = normalizePath(pathname);
-    if(includes.length > 0 && !isMatched(normalized, includes)) {
+    if (includes.length > 0 && !isMatched(normalized, includes)) {
       return false;
     }
-    if(excludes.length > 0 && isMatched(normalized, excludes)) {
+    if (excludes.length > 0 && isMatched(normalized, excludes)) {
       return false;
     }
     return true;
   }
 
   private static boolean isMatched(String pathname, String[] patterns) {
-    for(int i = patterns.length - 1; i >= 0; i-- ) {
+    for (int i = patterns.length - 1; i >= 0; i--) {
       String pattern = patterns[i];
-      if(SelectorUtils.matchPath(pattern, pathname)) {
+      if (SelectorUtils.matchPath(pattern, pathname)) {
         return true;
       }
     }
@@ -84,11 +72,11 @@ public class PathSelector {
   }
 
   public boolean isAncestorOfPotentiallySelected(String pathname) {
-    if(includes.length <= 0) {
+    if (includes.length <= 0) {
       return true;
     }
-    for(String include : includes) {
-      if(SelectorUtils.matchPatternStart(include, pathname)) {
+    for (String include : includes) {
+      if (SelectorUtils.matchPatternStart(include, pathname)) {
         return true;
       }
     }

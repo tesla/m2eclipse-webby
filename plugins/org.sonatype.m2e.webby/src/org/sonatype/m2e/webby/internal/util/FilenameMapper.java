@@ -1,22 +1,9 @@
-/*******************************************************************************
- * Copyright (c) 2011 Sonatype, Inc.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
-
 package org.sonatype.m2e.webby.internal.util;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.maven.artifact.Artifact;
 
-
-/**
- */
 public class FilenameMapper {
 
   private final String filenameMapping;
@@ -26,13 +13,13 @@ public class FilenameMapper {
   }
 
   public String mapFilename(Artifact artifact) {
-    Map<String, String> props = new LinkedHashMap<String, String>();
+    Map<String, String> props = new LinkedHashMap<>();
     props.put("@{groupId}@", emptify(artifact.getGroupId()));
     props.put("@{artifactId}@", emptify(artifact.getArtifactId()));
     props.put("@{version}@", emptify(artifact.getVersion()));
     props.put("@{baseVersion}@", emptify(artifact.getBaseVersion()));
     props.put("@{classifier}@", emptify(artifact.getClassifier()));
-    if(props.get("@{classifier}@").length() <= 0) {
+    if (props.get("@{classifier}@").length() <= 0) {
       props.put("@{dashClassifier?}@", "");
       props.put("@{dashClassifier}@", "");
     } else {
@@ -40,12 +27,12 @@ public class FilenameMapper {
       props.put("@{dashClassifier}@", "-" + artifact.getClassifier());
     }
     props.put("@{extension}@", emptify(artifact.getArtifactHandler().getExtension()));
-    if("par".equals(artifact.getType())) {
+    if ("par".equals(artifact.getType())) {
       props.put("@{extension}@", "jar");
     }
 
     String result = filenameMapping;
-    for(Map.Entry<String, String> e : props.entrySet()) {
+    for (Map.Entry<String, String> e : props.entrySet()) {
       result = result.replace(e.getKey(), e.getValue());
     }
     return result;
@@ -58,18 +45,18 @@ public class FilenameMapper {
   public String getTargetPath(Artifact artifact) {
     String targetPath = null;
     String targetDir = getTargetDir(artifact);
-    if(targetDir != null) {
+    if (targetDir != null) {
       targetPath = targetDir + mapFilename(artifact);
     }
     return targetPath;
   }
 
   public Map<String, Artifact> getTargetPaths(Collection<Artifact> artifacts) {
-    Map<String, Artifact> paths = new LinkedHashMap<String, Artifact>();
+    Map<String, Artifact> paths = new LinkedHashMap<>();
 
-    for(Artifact artifact : artifacts) {
+    for (Artifact artifact : artifacts) {
       String targetPath = getTargetPath(artifact);
-      if(targetPath != null) {
+      if (targetPath != null) {
         paths.put(targetPath, artifact);
       }
     }
@@ -78,23 +65,23 @@ public class FilenameMapper {
   }
 
   public static String getTargetDir(Artifact artifact) {
-    if(artifact.isOptional()) {
+    if (artifact.isOptional()) {
       return null;
     }
 
     String scope = artifact.getScope();
-    if(!Artifact.SCOPE_RUNTIME.equals(scope) && !Artifact.SCOPE_COMPILE.equals(scope)) {
+    if (!Artifact.SCOPE_RUNTIME.equals(scope) && !Artifact.SCOPE_COMPILE.equals(scope)) {
       return null;
     }
 
     String type = artifact.getType();
-    if("tld".equals(type)) {
+    if ("tld".equals(type)) {
       return "WEB-INF/tld/";
-    } else if("aar".equals(type)) {
+    } else if ("aar".equals(type)) {
       return "WEB-INF/services/";
-    } else if("mar".equals(type)) {
+    } else if ("mar".equals(type)) {
       return "WEB-INF/modules/";
-    } else if("jar".equals(type) || "ejb".equals(type) || "ejb-client".equals(type) || "test-jar".equals(type)
+    } else if ("jar".equals(type) || "ejb".equals(type) || "ejb-client".equals(type) || "test-jar".equals(type)
         || "par".equals(type)) {
       return "WEB-INF/lib/";
     }

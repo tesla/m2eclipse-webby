@@ -1,11 +1,3 @@
-/*******************************************************************************
- * Copyright (c) 2011 Sonatype, Inc.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
-
 package org.sonatype.m2e.webby.internal.config;
 
 import java.util.List;
@@ -13,10 +5,6 @@ import java.util.List;
 import org.apache.maven.model.Resource;
 import org.sonatype.m2e.webby.internal.util.WarUtils;
 
-
-
-/**
- */
 public class ResourceConfiguration extends Resource {
 
   private static final long serialVersionUID = -7661495998647821682L;
@@ -43,10 +31,10 @@ public class ResourceConfiguration extends Resource {
 
   public void setTargetPath(String targetPath) {
     targetPath = (targetPath != null) ? targetPath : "";
-    if(targetPath.endsWith("/")) {
+    if (targetPath.endsWith("/")) {
       targetPath = targetPath.substring(0, targetPath.length() - 1);
     }
-    if(".".equals(targetPath)) {
+    if (".".equals(targetPath)) {
       targetPath = "";
     }
     super.setTargetPath(targetPath);
@@ -58,10 +46,10 @@ public class ResourceConfiguration extends Resource {
 
   @Override
   public boolean equals(Object obj) {
-    if(this == obj) {
+    if (this == obj) {
       return true;
     }
-    if(!(obj instanceof ResourceConfiguration)) {
+    if (!(obj instanceof ResourceConfiguration)) {
       return false;
     }
     ResourceConfiguration that = (ResourceConfiguration) obj;

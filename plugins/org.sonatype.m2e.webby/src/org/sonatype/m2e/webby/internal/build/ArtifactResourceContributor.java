@@ -1,29 +1,12 @@
-/*******************************************************************************
- * Copyright (c) 2011 Sonatype, Inc.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
-
 package org.sonatype.m2e.webby.internal.build;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.io.*;
+import java.util.zip.*;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.sonatype.m2e.webby.internal.config.OverlayConfiguration;
-import org.sonatype.m2e.webby.internal.util.PathCollector;
-import org.sonatype.m2e.webby.internal.util.PathSelector;
+import org.sonatype.m2e.webby.internal.util.*;
 
-
-
-/**
- */
 public class ArtifactResourceContributor extends ResourceContributor {
 
   private File path;
@@ -38,13 +21,13 @@ public class ArtifactResourceContributor extends ResourceContributor {
 
   public void contribute(WarAssembler assembler, IProgressMonitor monitor) {
     try {
-      if(path.isDirectory()) {
+      if (path.isDirectory()) {
         processDirectory(assembler, monitor);
       } else {
         processFile(assembler, monitor);
       }
     } finally {
-      if(monitor != null) {
+      if (monitor != null) {
         monitor.done();
       }
     }
@@ -62,16 +45,16 @@ public class ArtifactResourceContributor extends ResourceContributor {
       ZipInputStream zis = new ZipInputStream(new FileInputStream(path));
       InputStream ncis = new NonClosingInputStream(zis);
       try {
-        for(ZipEntry ze = zis.getNextEntry(); ze != null; ze = zis.getNextEntry()) {
+        for (ZipEntry ze = zis.getNextEntry(); ze != null; ze = zis.getNextEntry()) {
           String path = ze.getName();
-          if(ze.isDirectory() || !pathSelector.isSelected(path)) {
+          if (ze.isDirectory() || !pathSelector.isSelected(path)) {
             continue;
           }
           String targetPath = overlayConfig.getTargetPath(path);
-          if(assembler.registerTargetPath(targetPath, ordinal)) {
+          if (assembler.registerTargetPath(targetPath, ordinal)) {
             try {
               assembler.copyResourceFile(ncis, targetPath, filtering, encoding, lastModified);
-            } catch(IOException e) {
+            } catch (IOException e) {
               assembler.addError(this.path.getAbsolutePath() + "!/" + path, targetPath, e);
             }
           }
@@ -79,7 +62,7 @@ public class ArtifactResourceContributor extends ResourceContributor {
       } finally {
         zis.close();
       }
-    } catch(IOException e) {
+    } catch (IOException e) {
       assembler.addError(this.path.getAbsolutePath(), null, e);
     }
   }
@@ -90,12 +73,12 @@ public class ArtifactResourceContributor extends ResourceContributor {
 
     PathCollector pathCollector = new PathCollector(overlayConfig.getIncludes(), overlayConfig.getExcludes());
 
-    for(String file : pathCollector.collectFiles(path)) {
+    for (String file : pathCollector.collectFiles(path)) {
       String targetPath = overlayConfig.getTargetPath(file);
-      if(!assembler.registerTargetPath(targetPath, ordinal)) {
+      if (!assembler.registerTargetPath(targetPath, ordinal)) {
         continue;
       }
-      if(targetPath.startsWith("WEB-INF/lib/") || targetPath.startsWith("WEB-INF/classes/")) {
+      if (targetPath.startsWith("WEB-INF/lib/") || targetPath.startsWith("WEB-INF/classes/")) {
         continue;
       }
       File sourceFile = new File(path, file);
@@ -106,7 +89,7 @@ public class ArtifactResourceContributor extends ResourceContributor {
         } finally {
           is.close();
         }
-      } catch(IOException e) {
+      } catch (IOException e) {
         assembler.addError(sourceFile.getAbsolutePath(), targetPath, e);
       }
     }
