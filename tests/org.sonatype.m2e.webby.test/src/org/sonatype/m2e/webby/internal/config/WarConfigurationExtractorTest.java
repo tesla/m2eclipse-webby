@@ -1,13 +1,10 @@
 package org.sonatype.m2e.webby.internal.config;
 
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.text.MessageFormat;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 public class WarConfigurationExtractorTest {
 
@@ -32,12 +29,12 @@ public class WarConfigurationExtractorTest {
     method.setAccessible(true);
     return (String) method.invoke(configExtractor, basedir, path);
   }
-  
-  private static String getBasedir(){
+
+  private static String getBasedir() {
     return System.getProperty("user.dir");
   }
-  
-  private static String getResolveResult(String result){
+
+  private static String getResolveResult(String result) {
     return MessageFormat.format(result, File.separatorChar);
   }
 }
