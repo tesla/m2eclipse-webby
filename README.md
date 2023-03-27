@@ -1,6 +1,6 @@
-# Webby: A Web Application Runner for Maven WAR Projects powered by [Cargo](http://cargo.codehaus.org/).
+# Webby: A Web Application Runner for Maven WAR Projects powered by [Cargo](https://codehaus-cargo.github.io/cargo/Home.html).
 
-To ease running and debugging of web applications created by the Maven WAR Plugin, a feature named "Web Application Launcher" (nickname "Webby") can be installed from the update site (https://github.com/RoiSoleil/m2eclipse-webby/raw/update-site/latest/). Once installed, the feature provides a new launch configuration type to run or debug a Maven WAR project in a servlet container. The Run Jetty Run plugin for Eclipse served as inspiration for Webby.
+To ease running and debugging of web applications created by the Maven WAR Plugin, a feature named "Web Application Launcher" (nickname "Webby") can be installed from the update site (https://github.com/tesla/m2eclipse-webby/releases/download/latest/). Once installed, the feature provides a new launch configuration type to run or debug a Maven WAR project in a servlet container. The Run Jetty Run plugin for Eclipse served as inspiration for Webby.
 
 Warning: Webby cannot be installed side-by-side with the m2e-wtp extension. Trying to do so will render one or both of the extensions unusable.
 
@@ -22,8 +22,12 @@ You will get the most out of Webby when you launch your web applications in debu
 
 You can find the latest build of Webby here:
 
-https://github.com/RoiSoleil/m2eclipse-webby/raw/update-site/latest/
+https://github.com/tesla/m2eclipse-webby/releases/download/latest/
+
+or any specific version here:
+
+https://github.com/tesla/m2eclipse-webby/releases/download/$VERSION/ (with $VERSION corresponding to a Release)
 
 #License
 
-[Eclipse Public License, v1.0](http://www.eclipse.org/legal/epl-v10.html)
+[Eclipse Public License, v2.0](http://www.eclipse.org/legal/epl-v20.html)
