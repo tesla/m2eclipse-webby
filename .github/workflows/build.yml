@@ -36,7 +36,7 @@ jobs:
              ${{ runner.os }}-maven-
       -  name: Build
          run: |
-            mvn -Dtycho.pomless.aggregator.names=plugins,tests,features,sites clean verify
+            mvn -Dtycho.pomless.aggregator.names=plugins,features,sites clean verify
          shell: bash
       - name: Flatten p2 update site
         uses: jbangdev/jbang-action@v0.105.1
