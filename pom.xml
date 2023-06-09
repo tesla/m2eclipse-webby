@@ -12,7 +12,7 @@
     <repositoryPathId>m2eclipse-webby</repositoryPathId>
     <p2MetadataName>M2E Webby Connector</p2MetadataName>
     <tycho.version>3.0.4</tycho.version>
-    <eclipse-repo.url>http://download.eclipse.org/releases/2023-03</eclipse-repo.url>
+    <eclipse-repo.url>http://download.eclipse.org/releases/2023-06</eclipse-repo.url>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
