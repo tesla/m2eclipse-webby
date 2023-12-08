@@ -22,7 +22,7 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.m2e.jdt
 Bundle-ClassPath: .,
  jars/maven-filtering-3.2.0.jar,
- jars/cargo/cargo-core-uberjar-1.10.6.jar,
+ jars/cargo/cargo-core-uberjar-1.10.11.jar,
  jars/cargo/ant-1.10.12.jar,
  jars/cargo/ant-launcher-1.10.12.jar,
  jars/cargo/commons-discovery-0.5.jar,
