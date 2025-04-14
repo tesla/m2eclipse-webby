@@ -2,7 +2,7 @@
 <feature
       id="org.sonatype.m2e.webby.feature"
       label="%featureName"
-      version="0.3.1.qualifier"
+      version="0.3.1"
       provider-name="%providerName"
       plugin="org.sonatype.m2e.webby">
 
