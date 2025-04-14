@@ -8,4 +8,4 @@ Fragment-Host: org.sonatype.m2e.webby
 Bundle-ActivationPolicy: lazy
 Require-Bundle: org.junit
 Bundle-ClassPath: .
-Bundle-RequiredExecutionEnvironment: JavaSE-17
+Bundle-RequiredExecutionEnvironment: JavaSE-21

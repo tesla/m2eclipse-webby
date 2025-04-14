@@ -1,14 +1,22 @@
 package org.sonatype.m2e.webby.internal.launch;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.tools.ant.types.Commandline;
-import org.codehaus.cargo.container.spi.jvm.*;
+import org.codehaus.cargo.container.spi.jvm.JvmLauncher;
+import org.codehaus.cargo.container.spi.jvm.JvmLauncherException;
 import org.codehaus.cargo.util.log.Logger;
-import org.eclipse.core.runtime.*;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.debug.core.ILaunch;
-import org.eclipse.jdt.launching.*;
+import org.eclipse.jdt.launching.IVMRunner;
+import org.eclipse.jdt.launching.VMRunnerConfiguration;
 
 public class EclipseJvmLauncher implements JvmLauncher {
 
@@ -35,8 +43,10 @@ public class EclipseJvmLauncher implements JvmLauncher {
 
   private String mainClass;
 
+  private Map<String, Object> vmSpecificAttributesMap;
+
   public EclipseJvmLauncher(IVMRunner runner, ILaunch launch, File workingDirectory, String[] envVariables,
-      IProgressMonitor monitor) {
+      Map<String, Object> vmSpecificAttributesMap, IProgressMonitor monitor) {
     this.runner = runner;
     this.launch = launch;
     this.monitor = monitor;
@@ -45,6 +55,7 @@ public class EclipseJvmLauncher implements JvmLauncher {
       this.envVariables = new ArrayList<>(envVariables.length);
       Collections.addAll(this.envVariables, envVariables);
     }
+    this.vmSpecificAttributesMap = vmSpecificAttributesMap;
   }
 
   public void setWorkingDirectory(File workingDirectory) {
@@ -164,7 +175,7 @@ public class EclipseJvmLauncher implements JvmLauncher {
     } else {
       throw new JvmLauncherException("neither main class nor JAR file have been specified");
     }
-
+    config.setVMSpecificAttributesMap(vmSpecificAttributesMap);
     config.setEnvironment(toArray(envVariables));
     config.setVMArguments(toArray(jvmArguments));
     config.setProgramArguments(prependJarFile(toArray(appArguments), jarFile));

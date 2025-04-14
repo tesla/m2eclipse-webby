@@ -1,36 +1,65 @@
 package org.sonatype.m2e.webby.internal.launch;
 
-import java.io.*;
 import java.io.File;
-import java.net.*;
-import java.util.*;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import org.apache.maven.project.MavenProject;
-import org.codehaus.cargo.container.*;
-import org.codehaus.cargo.container.configuration.*;
-import org.codehaus.cargo.container.deployable.*;
+import org.codehaus.cargo.container.Container;
+import org.codehaus.cargo.container.ContainerType;
+import org.codehaus.cargo.container.InstalledLocalContainer;
+import org.codehaus.cargo.container.configuration.Configuration;
+import org.codehaus.cargo.container.configuration.ConfigurationType;
+import org.codehaus.cargo.container.configuration.LocalConfiguration;
+import org.codehaus.cargo.container.deployable.DeployableType;
+import org.codehaus.cargo.container.deployable.WAR;
 import org.codehaus.cargo.container.jetty.JettyPropertySet;
-import org.codehaus.cargo.container.property.*;
-import org.codehaus.cargo.container.spi.configuration.AbstractStandaloneLocalConfiguration;
+import org.codehaus.cargo.container.property.GeneralPropertySet;
+import org.codehaus.cargo.container.property.ServletPropertySet;
 import org.codehaus.cargo.container.tomcat.TomcatPropertySet;
 import org.codehaus.cargo.container.tomcat.internal.AbstractCatalinaStandaloneLocalConfiguration;
-import org.codehaus.cargo.generic.*;
-import org.codehaus.cargo.generic.configuration.*;
-import org.codehaus.cargo.generic.deployable.*;
+import org.codehaus.cargo.generic.ContainerFactory;
+import org.codehaus.cargo.generic.DefaultContainerFactory;
+import org.codehaus.cargo.generic.configuration.ConfigurationFactory;
+import org.codehaus.cargo.generic.configuration.DefaultConfigurationFactory;
+import org.codehaus.cargo.generic.deployable.DefaultDeployableFactory;
+import org.codehaus.cargo.generic.deployable.DeployableFactory;
 import org.codehaus.cargo.util.CargoException;
 import org.codehaus.cargo.util.XmlReplacement.ReplacementBehavior;
-import org.eclipse.core.runtime.*;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.variables.VariablesPlugin;
-import org.eclipse.debug.core.*;
+import org.eclipse.debug.core.ILaunch;
+import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.launching.*;
+import org.eclipse.jdt.launching.IVMInstall;
+import org.eclipse.jdt.launching.IVMRunner;
+import org.eclipse.jdt.launching.JavaLaunchDelegate;
 import org.eclipse.m2e.core.project.IMavenProjectFacade;
 import org.eclipse.swt.program.Program;
-import org.eclipse.ui.console.*;
-import org.sonatype.m2e.webby.internal.*;
-import org.sonatype.m2e.webby.internal.config.*;
-import org.sonatype.m2e.webby.internal.launch.ui.*;
-import org.sonatype.m2e.webby.internal.util.*;
+import org.eclipse.ui.console.MessageConsole;
+import org.eclipse.ui.console.MessageConsoleStream;
+import org.sonatype.m2e.webby.internal.IWebApp;
+import org.sonatype.m2e.webby.internal.WebbyPlugin;
+import org.sonatype.m2e.webby.internal.config.WarConfiguration;
+import org.sonatype.m2e.webby.internal.config.WarConfigurationExtractor;
+import org.sonatype.m2e.webby.internal.launch.ui.CargoConsoleLogger;
+import org.sonatype.m2e.webby.internal.launch.ui.ConsoleManager;
+import org.sonatype.m2e.webby.internal.util.MavenUtils;
+import org.sonatype.m2e.webby.internal.util.PathSelector;
 
 public class WebbyLaunchDelegate extends JavaLaunchDelegate {
 
@@ -217,7 +246,7 @@ public class WebbyLaunchDelegate extends JavaLaunchDelegate {
       Container container = containerFactory.createContainer(cargo.getContainerId(), cargo.getContainerType(), config);
 
       EclipseJvmLauncherFactory jvmLauncherFactory = new EclipseJvmLauncherFactory(runner, launch,
-          cargo.getWorkDirectory(), envVariables, monitor);
+          cargo.getWorkDirectory(), envVariables, getVMSpecificAttributesMap(configuration), monitor);
 
       InstalledLocalContainer localContainer = (InstalledLocalContainer) container;
       localContainer.setLogger(logger);
