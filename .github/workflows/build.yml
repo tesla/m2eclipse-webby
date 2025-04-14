@@ -6,44 +6,53 @@ on:
       - master
     tags:
       - "*.*.*"
+
 jobs:
    build:
       runs-on: ubuntu-latest
       steps:
-      -  name: Checkout
-         uses: actions/checkout@v4.2.2
+
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
       - uses: actions/cache@v4.2.3
         with:
           path: /root/.jbang
           key: $-jbang-$
           restore-keys: |
                $-jbang-
-      -  name: Set up Maven
-         uses: stCarolas/setup-maven@v5
-         with:
-            maven-version: 3.9.9
-      -  name: Set up JDK 21
-         uses: actions/setup-java@v4.7.1
-         with:
-            distribution: temurin
-            java-version: 21
-      -  name: Set up cache
-         uses: actions/cache@v4.2.3
-         with:
+
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v5
+        with:
+           maven-version: 3.9.9
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4.7.1
+        with:
+           distribution: temurin
+           java-version: 21
+
+      - name: Set up cache
+        uses: actions/cache@v4.2.3
+        with:
            path: ~/.m2/repository
            key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
            restore-keys: |
              ${{ runner.os }}-maven-
-      -  name: Build
-         run: |
-            mvn --batch-mode -Dtycho.pomless.aggregator.names=plugins,features,sites clean verify
-         shell: bash
+
+      - name: Build
+        uses: GabrielBB/xvfb-action@v1.7
+        with:
+          run: mvn --batch-mode -Dtycho.pomless.aggregator.names=plugins,tests,features,sites clean verify
+
       - name: Flatten p2 update site
         uses: jbangdev/jbang-action@v0.125.1
         with:
           trust: https://gist.github.com
           script: https://gist.github.com/fbricon/3c718d03f55c3ceba5dea570af4af5f8
           args: ./sites/org.sonatype.m2e.webby.repository
+
       - name: Upload flat p2 update site
         if: github.ref == 'refs/heads/master'
         uses: marvinpinto/action-automatic-releases@latest

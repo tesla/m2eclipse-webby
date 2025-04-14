@@ -28,6 +28,7 @@
 
   <modules>
     <module>plugins</module>
+    <module>tests</module>
     <module>features</module>
     <module>sites</module>
   </modules>
@@ -41,9 +42,34 @@
         <configuration>
           <environments>
             <environment>
+              <os>linux</os>
+              <ws>gtk</ws>
+              <arch>x86_64</arch>
+            </environment>
+            <environment>
+              <os>linux</os>
+              <ws>gtk</ws>
+              <arch>ppc64le</arch>
+            </environment>
+             <environment>
+              <os>linux</os>
+              <ws>gtk</ws>
+              <arch>aarch64</arch>
+            </environment>
+            <environment>
               <os>win32</os>
               <ws>win32</ws>
               <arch>x86_64</arch>
+            </environment>
+            <environment>
+              <os>macosx</os>
+              <ws>cocoa</ws>
+              <arch>x86_64</arch>
+            </environment>
+            <environment>
+              <os>macosx</os>
+              <ws>cocoa</ws>
+              <arch>aarch64</arch>
             </environment>
           </environments>
         </configuration>
@@ -53,11 +79,6 @@
         <artifactId>tycho-maven-plugin</artifactId>
         <version>${tycho.version}</version>
         <extensions>true</extensions>
-      </plugin>
-      <plugin>
-        <groupId>org.eclipse.tycho</groupId>
-        <artifactId>tycho.versions-plugin</artifactId>
-        <version>${tycho.version}</version>
       </plugin>
       <plugin>
         <groupId>org.eclipse.tycho</groupId>
