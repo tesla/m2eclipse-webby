@@ -1,4 +1,5 @@
 name: build
+
 on:
   pull_request:
   push:
@@ -6,48 +7,61 @@ on:
       - master
     tags:
       - "*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-   build:
-      runs-on: ubuntu-latest
-      steps:
-
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
       - name: Checkout
-        uses: actions/checkout@v4.2.2
-
-      - uses: actions/cache@v4.2.3
-        with:
-          path: /root/.jbang
-          key: $-jbang-$
-          restore-keys: |
-               $-jbang-
-
-      - name: Set up Maven
-        uses: stCarolas/setup-maven@v5
-        with:
-           maven-version: 3.9.9
+        uses: actions/checkout@v7
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4.7.1
+        uses: actions/setup-java@v6
         with:
-           distribution: temurin
-           java-version: 21
+          distribution: temurin
+          java-version: 21
+          cache: maven
 
-      - name: Set up cache
-        uses: actions/cache@v4.2.3
+      - name: Cache Tycho p2 downloads
+        uses: actions/cache@v6
         with:
-           path: ~/.m2/repository
-           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-           restore-keys: |
-             ${{ runner.os }}-maven-
+          path: ~/.m2/repository/.cache/tycho
+          key: ${{ runner.os }}-tycho-${{ hashFiles('releng/webby.target') }}
+          restore-keys: |
+            ${{ runner.os }}-tycho-
 
-      - name: Build
-        uses: GabrielBB/xvfb-action@v1.7
+      - name: Build and test
+        run: xvfb-run --auto-servernum ./mvnw --batch-mode --no-transfer-progress clean verify
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v7
         with:
-          run: mvn --batch-mode -Dtycho.pomless.aggregator.names=plugins,tests,features,sites clean verify
+          name: test-reports
+          path: |
+            tests/*/target/surefire-reports/
+            tests/*/target/work/data/.metadata/.log
+            tests/*/screenshots/
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          files: releng/coverage/target/site/jacoco-aggregate/jacoco.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
 
       - name: Flatten p2 update site
-        uses: jbangdev/jbang-action@v0.125.1
+        uses: jbangdev/jbang-action@v0.142.0
         with:
           trust: https://gist.github.com
           script: https://gist.github.com/fbricon/3c718d03f55c3ceba5dea570af4af5f8
@@ -55,9 +69,9 @@ jobs:
 
       - name: Upload flat p2 update site
         if: github.ref == 'refs/heads/master'
-        uses: marvinpinto/action-automatic-releases@latest
+        uses: marvinpinto/action-automatic-releases@v1.2.1
         with:
-          repo_token: "${{secrets.GITHUB_TOKEN}}"
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: "latest"
           prerelease: true
           title: "Development Build"
@@ -65,7 +79,7 @@ jobs:
             ./sites/org.sonatype.m2e.webby.repository/target/flat-repository/*
 
       - name: Release
-        uses: softprops/action-gh-release@v2.2.1
+        uses: softprops/action-gh-release@v3
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |

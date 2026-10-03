@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.sonatype.m2e.webby</groupId>
@@ -8,38 +7,101 @@
   <version>0.3.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <properties>
-    <repositoryPathId>m2eclipse-webby</repositoryPathId>
-    <p2MetadataName>M2E Webby Connector</p2MetadataName>
-    <tycho.version>4.0.12</tycho.version>
-    <eclipse-repo.url>http://download.eclipse.org/releases/latest</eclipse-repo.url>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>21</maven.compiler.source>
-    <maven.compiler.target>21</maven.compiler.target>
-  </properties>  
+  <name>M2E Webby</name>
+  <description>Web Application Launcher for Maven WAR projects in Eclipse, powered by Cargo</description>
+  <url>https://github.com/tesla/m2eclipse-webby</url>
 
-  <repositories>
-    <repository>
-      <id>eclipse-release</id>
-      <url>${eclipse-repo.url}</url>
-      <layout>p2</layout>
-    </repository>
-  </repositories>
+  <licenses>
+    <license>
+      <name>Eclipse Public License v2.0</name>
+      <url>https://www.eclipse.org/legal/epl-v20.html</url>
+    </license>
+  </licenses>
+
+  <scm>
+    <connection>scm:git:https://github.com/tesla/m2eclipse-webby.git</connection>
+    <url>https://github.com/tesla/m2eclipse-webby</url>
+  </scm>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.release>21</maven.compiler.release>
+
+    <tycho.version>5.0.4</tycho.version>
+    <jacoco.version>0.8.15</jacoco.version>
+
+    <!-- Libraries embedded in the org.sonatype.m2e.webby bundle (see plugins/org.sonatype.m2e.webby/pom.xml) -->
+    <cargo.version>1.10.29</cargo.version>
+    <ant.version>1.10.18</ant.version>
+    <commons-discovery.version>0.5</commons-discovery.version>
+    <commons-logging.version>1.4.0</commons-logging.version>
+    <jdom2.version>2.0.6.1</jdom2.version>
+    <jaxen.version>2.0.6</jaxen.version>
+    <!-- 3.3+ requires commons-io and javax.inject, which the m2e Maven runtime does not provide -->
+    <maven-filtering.version>3.2.0</maven-filtering.version>
+
+    <!-- Containers the integration tests launch web applications in -->
+    <tomcat11.version>11.0.26</tomcat11.version>
+    <tomcat10.version>10.1.60</tomcat10.version>
+    <jetty12.version>12.0.39</jetty12.version>
+
+    <!-- Set by jacoco:prepare-agent when the coverage profile is active -->
+    <tycho.testArgLine></tycho.testArgLine>
+  </properties>
 
   <modules>
     <module>plugins</module>
     <module>tests</module>
     <module>features</module>
     <module>sites</module>
+    <module>releng/coverage</module>
   </modules>
 
   <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <version>3.11.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>${jacoco.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-surefire-plugin</artifactId>
+          <version>${tycho.version}</version>
+          <configuration>
+            <useUIHarness>true</useUIHarness>
+            <useUIThread>false</useUIThread>
+            <product>org.eclipse.platform.ide</product>
+            <application>org.eclipse.ui.ide.workbench</application>
+            <trimStackTrace>false</trimStackTrace>
+            <forkedProcessTimeoutInSeconds>1800</forkedProcessTimeoutInSeconds>
+            <argLine>${tycho.testArgLine}</argLine>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
     <plugins>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-maven-plugin</artifactId>
+        <version>${tycho.version}</version>
+        <extensions>true</extensions>
+      </plugin>
       <plugin>
         <groupId>org.eclipse.tycho</groupId>
         <artifactId>target-platform-configuration</artifactId>
         <version>${tycho.version}</version>
         <configuration>
+          <target>
+            <file>${maven.multiModuleProjectDirectory}/releng/webby.target</file>
+          </target>
           <environments>
             <environment>
               <os>linux</os>
@@ -47,11 +109,6 @@
               <arch>x86_64</arch>
             </environment>
             <environment>
-              <os>linux</os>
-              <ws>gtk</ws>
-              <arch>ppc64le</arch>
-            </environment>
-             <environment>
               <os>linux</os>
               <ws>gtk</ws>
               <arch>aarch64</arch>
@@ -76,9 +133,11 @@
       </plugin>
       <plugin>
         <groupId>org.eclipse.tycho</groupId>
-        <artifactId>tycho-maven-plugin</artifactId>
+        <artifactId>tycho-compiler-plugin</artifactId>
         <version>${tycho.version}</version>
-        <extensions>true</extensions>
+        <configuration>
+          <showWarnings>true</showWarnings>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.eclipse.tycho</groupId>
@@ -88,18 +147,38 @@
           <finalName>org.sonatype.m2e.webby-${project.version}</finalName>
         </configuration>
       </plugin>
-      <plugin>
-        <groupId>org.eclipse.tycho</groupId>
-        <artifactId>tycho-surefire-plugin</artifactId>
-        <version>${tycho.version}</version>
-        <configuration>
-          <useUIHarness>true</useUIHarness>
-          <includes>
-            <include>**/*Test.java</include>
-          </includes>
-          <forkedProcessTimeoutInSeconds>7200</forkedProcessTimeoutInSeconds>
-        </configuration>
-      </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <!-- Code coverage of the test runs, aggregated by releng/coverage and uploaded to Codecov from CI -->
+      <id>coverage</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>prepare-agent</id>
+                <goals>
+                  <goal>prepare-agent</goal>
+                </goals>
+                <configuration>
+                  <propertyName>tycho.testArgLine</propertyName>
+                  <includes>
+                    <include>org.sonatype.m2e.webby.*</include>
+                  </includes>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

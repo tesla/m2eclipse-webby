@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.sonatype.m2e.webby</groupId>
+    <artifactId>org.sonatype.m2e.webby.parent</artifactId>
+    <version>0.3.2-SNAPSHOT</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>org.sonatype.m2e.webby</artifactId>
+  <packaging>eclipse-plugin</packaging>
+  <name>M2E Webby Plugin</name>
+
+  <!--
+    Third-party libraries embedded in the bundle. They are copied without version suffix into jars/ so that
+    META-INF/MANIFEST.MF (Bundle-ClassPath) and .classpath do not change when a version is bumped here.
+  -->
+  <dependencies>
+    <dependency>
+      <groupId>org.codehaus.cargo</groupId>
+      <artifactId>cargo-core-uberjar</artifactId>
+      <version>${cargo.version}</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.ant</groupId>
+      <artifactId>ant</artifactId>
+      <version>${ant.version}</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.ant</groupId>
+      <artifactId>ant-launcher</artifactId>
+      <version>${ant.version}</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>commons-discovery</groupId>
+      <artifactId>commons-discovery</artifactId>
+      <version>${commons-discovery.version}</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <version>${commons-logging.version}</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.jdom</groupId>
+      <artifactId>jdom2</artifactId>
+      <version>${jdom2.version}</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>jaxen</groupId>
+      <artifactId>jaxen</artifactId>
+      <version>${jaxen.version}</version>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.shared</groupId>
+      <artifactId>maven-filtering</artifactId>
+      <version>${maven-filtering.version}</version>
+      <optional>true</optional>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <!-- the dependencies above are only embedded jars, they must not leak into the OSGi target platform -->
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>target-platform-configuration</artifactId>
+        <configuration>
+          <pomDependencies>ignore</pomDependencies>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>embed-libraries</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.basedir}/jars</outputDirectory>
+              <stripVersion>true</stripVersion>
+              <overWriteReleases>true</overWriteReleases>
+              <artifactItems>
+                <artifactItem><groupId>org.codehaus.cargo</groupId><artifactId>cargo-core-uberjar</artifactId><version>${cargo.version}</version></artifactItem>
+                <artifactItem><groupId>org.apache.ant</groupId><artifactId>ant</artifactId><version>${ant.version}</version></artifactItem>
+                <artifactItem><groupId>org.apache.ant</groupId><artifactId>ant-launcher</artifactId><version>${ant.version}</version></artifactItem>
+                <artifactItem><groupId>commons-discovery</groupId><artifactId>commons-discovery</artifactId><version>${commons-discovery.version}</version></artifactItem>
+                <artifactItem><groupId>commons-logging</groupId><artifactId>commons-logging</artifactId><version>${commons-logging.version}</version></artifactItem>
+                <artifactItem><groupId>org.jdom</groupId><artifactId>jdom2</artifactId><version>${jdom2.version}</version></artifactItem>
+                <artifactItem><groupId>jaxen</groupId><artifactId>jaxen</artifactId><version>${jaxen.version}</version></artifactItem>
+                <artifactItem><groupId>org.apache.maven.shared</groupId><artifactId>maven-filtering</artifactId><version>${maven-filtering.version}</version></artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

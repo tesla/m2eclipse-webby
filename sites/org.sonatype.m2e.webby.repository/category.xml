@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <feature url="features/org.sonatype.m2e.webby.feature_0.3.2.qualifier.jar" id="org.sonatype.m2e.webby.feature" version="0.3.2.qualifier">
+   <feature id="org.sonatype.m2e.webby.feature" version="0.0.0">
       <category name="m2eclipse-webby"/>
    </feature>
    <category-def name="m2eclipse-webby" label="Web Application Launcher for M2Eclipse"/>
-   <category-def name="m2eclipse-webby-addons" label="Web Application Launcher for M2Eclipse Add-Ons"/>
 </site>

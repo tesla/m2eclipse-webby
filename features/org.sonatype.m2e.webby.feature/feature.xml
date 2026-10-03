@@ -4,7 +4,8 @@
       label="%featureName"
       version="0.3.2.qualifier"
       provider-name="%providerName"
-      plugin="org.sonatype.m2e.webby">
+      plugin="org.sonatype.m2e.webby"
+>
 
    <description url="%descriptionURL">
       %description
@@ -19,15 +20,13 @@
    </license>
 
    <requires>
-      <import feature="org.eclipse.platform" version="3.4.0" match="greaterOrEqual"/>
-      <import feature="org.eclipse.m2e.feature" version="1.0.0" match="greaterOrEqual"/>
+      <import feature="org.eclipse.platform" version="4.30.0" match="greaterOrEqual"/>
+      <import feature="org.eclipse.jdt" version="3.19.0" match="greaterOrEqual"/>
+      <import feature="org.eclipse.m2e.feature" version="2.0.0" match="greaterOrEqual"/>
    </requires>
 
    <plugin
          id="org.sonatype.m2e.webby"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
+         version="0.0.0"/>
 
 </feature>

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.sonatype.m2e.webby</groupId>
+    <artifactId>org.sonatype.m2e.webby.parent</artifactId>
+    <version>0.3.2-SNAPSHOT</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>org.sonatype.m2e.webby.test</artifactId>
+  <packaging>eclipse-test-plugin</packaging>
+  <name>M2E Webby Tests</name>
+
+  <properties>
+    <containers.directory>${project.build.directory}/containers</containers.directory>
+  </properties>
+
+  <!-- Only listed for Dependabot, the distributions are unpacked below -->
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.tomcat</groupId>
+      <artifactId>tomcat</artifactId>
+      <version>${tomcat11.version}</version>
+      <type>zip</type>
+      <scope>test</scope>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-home</artifactId>
+      <version>${jetty12.version}</version>
+      <type>zip</type>
+      <scope>test</scope>
+      <optional>true</optional>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>unpack-containers</id>
+            <phase>generate-test-resources</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <skip>${skipTests}</skip>
+              <outputDirectory>${containers.directory}</outputDirectory>
+              <overWriteReleases>false</overWriteReleases>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.apache.tomcat</groupId>
+                  <artifactId>tomcat</artifactId>
+                  <version>${tomcat11.version}</version>
+                  <type>zip</type>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.apache.tomcat</groupId>
+                  <artifactId>tomcat</artifactId>
+                  <version>${tomcat10.version}</version>
+                  <type>zip</type>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.eclipse.jetty</groupId>
+                  <artifactId>jetty-home</artifactId>
+                  <version>${jetty12.version}</version>
+                  <type>zip</type>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-surefire-plugin</artifactId>
+        <configuration>
+          <includes>
+            <include>**/*Test.java</include>
+          </includes>
+          <systemProperties>
+            <webby.test.resources>${project.basedir}/resources</webby.test.resources>
+            <webby.test.tomcat11x.home>${containers.directory}/apache-tomcat-${tomcat11.version}</webby.test.tomcat11x.home>
+            <webby.test.tomcat10x.home>${containers.directory}/apache-tomcat-${tomcat10.version}</webby.test.tomcat10x.home>
+            <webby.test.jetty12x.home>${containers.directory}/jetty-home-${jetty12.version}</webby.test.jetty12x.home>
+          </systemProperties>
+        </configuration>
+      </plugin>
+      <plugin>
+        <!-- the test runtime needs the whole IDE (workbench, JDT, m2e) to exercise launch configurations and views -->
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>target-platform-configuration</artifactId>
+        <configuration>
+          <pomDependencies>ignore</pomDependencies>
+          <dependency-resolution>
+            <extraRequirements>
+              <requirement>
+                <type>eclipse-feature</type>
+                <id>org.eclipse.platform</id>
+                <versionRange>0.0.0</versionRange>
+              </requirement>
+              <requirement>
+                <type>eclipse-feature</type>
+                <id>org.eclipse.jdt</id>
+                <versionRange>0.0.0</versionRange>
+              </requirement>
+              <requirement>
+                <type>eclipse-feature</type>
+                <id>org.eclipse.m2e.feature</id>
+                <versionRange>0.0.0</versionRange>
+              </requirement>
+            </extraRequirements>
+          </dependency-resolution>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

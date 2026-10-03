@@ -5,3 +5,7 @@
 .polyglot.*
 target/
 bin/
+
+# Libraries embedded in org.sonatype.m2e.webby, copied by maven-dependency-plugin
+plugins/org.sonatype.m2e.webby/jars/
+screenshots/
