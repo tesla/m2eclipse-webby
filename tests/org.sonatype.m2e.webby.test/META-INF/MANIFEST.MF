@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Web Application Launcher for M2Eclipse Tests
 Bundle-Vendor: Tesla
 Bundle-SymbolicName: org.sonatype.m2e.webby.test
-Bundle-Version: 0.3.2.qualifier
+Bundle-Version: 1.0.0
 Fragment-Host: org.sonatype.m2e.webby
 Automatic-Module-Name: org.sonatype.m2e.webby.test
 Require-Bundle: org.eclipse.swtbot.swt.finder,
