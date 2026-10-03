@@ -1,13 +1,32 @@
 package org.sonatype.m2e.webby.internal.util;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputFilter;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
+/**
+ * Tracks which overlays provide a resource of the WAR directory. Overlays are identified by their ordinal, the lowest
+ * ordinal wins when several overlays provide the same resource.
+ */
 public class ResourceRegistry {
 
-  private static int[] EMPTY = {};
+  private static final int[] EMPTY = {};
 
-  private Map<String, Object> resources;
+  private static final ObjectInputFilter SERIALIZATION_FILTER = ObjectInputFilter.Config
+      .createFilter("maxdepth=5;java.util.*;java.lang.*;!*");
+
+  /** Maps each resource to its overlay ordinal (an {@link Integer}) or to the sorted ordinals (an {@code int[]}). */
+  private final Map<String, Object> resources;
 
   public ResourceRegistry() {
     this(new HashMap<>());
@@ -17,12 +36,13 @@ public class ResourceRegistry {
     this.resources = resources;
   }
 
-  private String normalizePath(String path) {
-    String result = path;
-    result = result.replace('\\', '/');
-    return result;
+  private static String normalizePath(String path) {
+    return path.replace('\\', '/');
   }
 
+  /**
+   * @return {@code true} if the given overlay provides the resource, i.e. no overlay with a lower ordinal does
+   */
   public boolean register(String resourceName, int overlayOrdinal) {
     boolean accept = false;
 
@@ -30,7 +50,7 @@ public class ResourceRegistry {
     Object ordinals = resources.get(resourceName);
 
     if (ordinals == null) {
-      resources.put(resourceName, Integer.valueOf(overlayOrdinal));
+      resources.put(resourceName, overlayOrdinal);
       accept = true;
     } else if (ordinals instanceof Number) {
       int existing = ((Number) ordinals).intValue();
@@ -64,6 +84,10 @@ public class ResourceRegistry {
     return accept;
   }
 
+  /**
+   * @return {@code null} if the overlay did not provide the resource, else the ordinals of the overlays still
+   *         providing it
+   */
   public int[] unregister(String resourceName, int overlayOrdinal) {
     resourceName = normalizePath(resourceName);
     Object ordinals = resources.get(resourceName);
@@ -89,7 +113,7 @@ public class ResourceRegistry {
         return EMPTY;
       } else if (existing.length == 2) {
         int remaining = existing[existing.length - index - 1];
-        resources.put(resourceName, Integer.valueOf(remaining));
+        resources.put(resourceName, remaining);
         return new int[] { remaining };
       } else {
         int[] tmp = new int[existing.length - 1];
@@ -103,32 +127,24 @@ public class ResourceRegistry {
 
   public void save(File file) throws IOException {
     file.getAbsoluteFile().getParentFile().mkdirs();
-    FileOutputStream fos = new FileOutputStream(file);
-    try {
-      ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(fos));
-      oos.writeObject(resources);
-      oos.close();
-    } finally {
-      fos.close();
+    try (OutputStream os = Files.newOutputStream(file.toPath());
+        ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(os))) {
+      oos.writeObject(new HashMap<>(resources));
     }
   }
 
   @SuppressWarnings("unchecked")
   public static ResourceRegistry load(File file) throws IOException {
-    FileInputStream fis = new FileInputStream(file);
-    try {
-      ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(fis));
+    try (InputStream is = Files.newInputStream(file.toPath());
+        ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(is))) {
+      ois.setObjectInputFilter(SERIALIZATION_FILTER);
       Object resources = ois.readObject();
-      ois.close();
       if (resources instanceof Map) {
         return new ResourceRegistry((Map<String, Object>) resources);
-      } else {
-        throw new IOException("Corrupted object stream");
       }
-    } catch (ClassNotFoundException e) {
-      throw (IOException) new IOException("Corrupted object stream").initCause(e);
-    } finally {
-      fis.close();
+      throw new IOException("Corrupted object stream");
+    } catch (ClassNotFoundException | RuntimeException e) {
+      throw new IOException("Corrupted object stream", e);
     }
   }
 

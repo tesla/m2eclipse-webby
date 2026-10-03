@@ -1,45 +1,46 @@
 package org.sonatype.m2e.webby.internal;
 
-import org.apache.maven.model.Model;
 import org.eclipse.core.expressions.PropertyTester;
-import org.eclipse.core.resources.*;
-import org.eclipse.core.runtime.*;
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.Adapters;
 import org.eclipse.m2e.core.MavenPlugin;
+import org.eclipse.m2e.core.project.IMavenProjectFacade;
 
+/**
+ * Tests whether the receiver is a Maven project with "war" packaging (known to m2e), or the POM of such a project.
+ */
 public class WebbyPropertyTester extends PropertyTester {
 
-  private static final String IS_WEB_APP = "isWebApp";
+  static final String IS_WEB_APP = "isWebApp";
 
   private static final String POM_FILE_NAME = "pom.xml";
 
+  private static final String WAR_PACKAGING = "war";
+
+  @Override
   public boolean test(Object receiver, String property, Object[] args, Object expectedValue) {
-    if (IS_WEB_APP.equals(property)) {
-      IFile pomFile = getPomFile((IAdaptable) receiver);
-      if (pomFile != null && pomFile.exists()) {
-        try {
-          Model pom = MavenPlugin.getMaven().readModel(pomFile.getContents(true));
-          return "war".equals(pom.getPackaging());
-        } catch (CoreException e) {
-          WebbyPlugin.getDefault().getLog()
-                     .log(new Status(IStatus.ERROR, WebbyPlugin.getPluginId(), e.getMessage(), e));
-        }
+    if (!IS_WEB_APP.equals(property)) {
+      return false;
+    }
+
+    IProject project = Adapters.adapt(receiver, IProject.class);
+    if (project == null) {
+      IFile file = Adapters.adapt(receiver, IFile.class);
+      if (file != null && POM_FILE_NAME.equals(file.getName()) && file.getFullPath().segmentCount() == 2) {
+        project = file.getProject();
       }
     }
-    return false;
+    return project != null && isWarProject(project);
   }
 
-  private IFile getPomFile(IAdaptable adaptable) {
-    IProject project = adaptable.getAdapter(IProject.class);
-    if (project != null) {
-      return project.getFile(POM_FILE_NAME);
+  static boolean isWarProject(IProject project) {
+    if (!project.isAccessible()) {
+      return false;
     }
 
-    IFile file = adaptable.getAdapter(IFile.class);
-    if (file != null && POM_FILE_NAME.equals(file.getName()) && file.getFullPath().segmentCount() == 2) {
-      return file;
-    }
-
-    return null;
+    IMavenProjectFacade facade = MavenPlugin.getMavenProjectRegistry().getProject(project);
+    return facade != null && WAR_PACKAGING.equals(facade.getPackaging());
   }
 
 }

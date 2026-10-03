@@ -94,7 +94,10 @@ class CargoConfiguration {
   }
 
   public void setContextName(String contextName) {
-    if (contextName != null && contextName.startsWith("/")) {
+    if (contextName == null) {
+      contextName = "";
+    }
+    while (contextName.startsWith("/")) {
       contextName = contextName.substring(1);
     }
     this.contextName = contextName;

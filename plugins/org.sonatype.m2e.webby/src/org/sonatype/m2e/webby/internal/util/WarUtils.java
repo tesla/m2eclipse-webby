@@ -1,14 +1,21 @@
 package org.sonatype.m2e.webby.internal.util;
 
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.project.MavenProject;
 
-public class WarUtils {
+public final class WarUtils {
 
+  private WarUtils() {
+  }
+
+  /**
+   * @return the dependencies of type war or zip, which the maven-war-plugin uses as overlays, by conflict id
+   */
   public static Map<String, Artifact> getOverlayArtifacts(MavenProject mvnProject) {
-    Map<String, Artifact> overlayArtifacts = new LinkedHashMap<String, Artifact>();
+    Map<String, Artifact> overlayArtifacts = new LinkedHashMap<>();
     for (Artifact artifact : mvnProject.getArtifacts()) {
       String type = artifact.getType();
       if ("war".equals(type) || "zip".equals(type)) {
@@ -18,10 +25,13 @@ public class WarUtils {
     return overlayArtifacts;
   }
 
+  /**
+   * @return the path of a resource in the WAR, given the target directory of its source
+   */
   public static String getTargetPath(String targetDir, String sourcePath) {
     String targetPath = sourcePath.replace('\\', '/');
 
-    if (targetDir != null && targetDir.length() > 0) {
+    if (targetDir != null && !targetDir.isEmpty()) {
       targetDir = targetDir.replace('\\', '/');
       if (targetDir.endsWith("/") && targetPath.startsWith("/")) {
         targetPath = targetDir + targetPath.substring(1);
@@ -35,10 +45,14 @@ public class WarUtils {
     return targetPath;
   }
 
+  /**
+   * @return the path of a resource relative to the target directory of its source, {@code null} if the resource is
+   *         not located in the target directory
+   */
   public static String getSourcePath(String targetDir, String targetPath) {
     String sourcePath = targetPath.replace('\\', '/');
 
-    if (targetDir != null && targetDir.length() > 0) {
+    if (targetDir != null && !targetDir.isEmpty()) {
       targetDir = targetDir.replace('\\', '/');
       if (!targetDir.endsWith("/")) {
         targetDir += '/';

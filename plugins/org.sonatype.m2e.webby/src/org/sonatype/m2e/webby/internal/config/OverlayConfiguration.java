@@ -1,10 +1,16 @@
 package org.sonatype.m2e.webby.internal.config;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 import org.sonatype.m2e.webby.internal.util.WarUtils;
 
+/**
+ * An overlay of the maven-war-plugin, the main overlay (without coordinates) denotes the WAR project itself.
+ */
 public class OverlayConfiguration implements Serializable {
 
   private static final long serialVersionUID = 8370499954146691677L;
@@ -38,7 +44,7 @@ public class OverlayConfiguration implements Serializable {
   private boolean skip = false;
 
   private static List<String> toList(String[] array) {
-    List<String> list = new ArrayList<String>();
+    List<String> list = new ArrayList<>();
     if (array != null) {
       Collections.addAll(list, array);
     }
@@ -69,7 +75,7 @@ public class OverlayConfiguration implements Serializable {
   }
 
   public String getId() {
-    if (id == null || id.length() <= 0) {
+    if (id == null || id.isEmpty()) {
       if (isMain()) {
         return "(web project)";
       }
@@ -83,7 +89,7 @@ public class OverlayConfiguration implements Serializable {
     buffer.append(getGroupId());
     buffer.append(':').append(getArtifactId());
     buffer.append(':').append(getType());
-    if (getClassifier().length() > 0) {
+    if (!getClassifier().isEmpty()) {
       buffer.append(':').append(getClassifier());
     }
     return buffer.toString();
@@ -94,7 +100,7 @@ public class OverlayConfiguration implements Serializable {
   }
 
   public boolean isMain() {
-    return getGroupId().length() <= 0 && getArtifactId().length() <= 0;
+    return getGroupId().isEmpty() && getArtifactId().isEmpty();
   }
 
   public String getGroupId() {
@@ -180,7 +186,7 @@ public class OverlayConfiguration implements Serializable {
   }
 
   public void setType(String type) {
-    this.type = (type != null && type.length() > 0) ? type : DEFAULT_TYPE;
+    this.type = (type != null && !type.isEmpty()) ? type : DEFAULT_TYPE;
   }
 
   public String getTargetPath(String sourcePath) {
@@ -201,31 +207,16 @@ public class OverlayConfiguration implements Serializable {
       return false;
     }
     OverlayConfiguration that = (OverlayConfiguration) obj;
-    return eq(getArtifactId(), that.getArtifactId()) && eq(getGroupId(), that.getGroupId())
-        && eq(getClassifier(), that.getClassifier()) && eq(getType(), that.getType())
-        && eq(getIncludes(), that.getIncludes()) && eq(getExcludes(), that.getExcludes())
-        && isFiltering() == that.isFiltering() && eq(getEncoding(), that.getEncoding())
-        && eq(getTargetPath(), that.getTargetPath()) && isSkip() == that.isSkip();
-  }
-
-  private static <T> boolean eq(T s1, T s2) {
-    return s1 != null ? s1.equals(s2) : s2 == null;
+    return Objects.equals(getArtifactId(), that.getArtifactId()) && Objects.equals(getGroupId(), that.getGroupId())
+        && Objects.equals(getClassifier(), that.getClassifier()) && Objects.equals(getType(), that.getType())
+        && Objects.equals(getIncludes(), that.getIncludes()) && Objects.equals(getExcludes(), that.getExcludes())
+        && isFiltering() == that.isFiltering() && Objects.equals(getEncoding(), that.getEncoding())
+        && Objects.equals(getTargetPath(), that.getTargetPath()) && isSkip() == that.isSkip();
   }
 
   @Override
   public int hashCode() {
-    int hash = 17;
-    hash = hash * 31 + hash(getGroupId());
-    hash = hash * 31 + hash(getArtifactId());
-    hash = hash * 31 + hash(getClassifier());
-    hash = hash * 31 + hash(getType());
-    hash = hash * 31 + hash(getIncludes());
-    hash = hash * 31 + hash(getExcludes());
-    return hash;
-  }
-
-  private static int hash(Object obj) {
-    return obj != null ? obj.hashCode() : 0;
+    return Objects.hash(getGroupId(), getArtifactId(), getClassifier(), getType(), getIncludes(), getExcludes());
   }
 
 }

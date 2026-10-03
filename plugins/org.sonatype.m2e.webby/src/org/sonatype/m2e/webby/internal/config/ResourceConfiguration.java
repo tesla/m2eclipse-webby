@@ -1,10 +1,14 @@
 package org.sonatype.m2e.webby.internal.config;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.maven.model.Resource;
 import org.sonatype.m2e.webby.internal.util.WarUtils;
 
+/**
+ * A web resource of the maven-war-plugin, the main one being the WAR source directory.
+ */
 public class ResourceConfiguration extends Resource {
 
   private static final long serialVersionUID = -7661495998647821682L;
@@ -29,6 +33,7 @@ public class ResourceConfiguration extends Resource {
     this.encoding = encoding;
   }
 
+  @Override
   public void setTargetPath(String targetPath) {
     targetPath = (targetPath != null) ? targetPath : "";
     if (targetPath.endsWith("/")) {
@@ -53,26 +58,14 @@ public class ResourceConfiguration extends Resource {
       return false;
     }
     ResourceConfiguration that = (ResourceConfiguration) obj;
-    return eq(getDirectory(), that.getDirectory()) && eq(getIncludes(), that.getIncludes())
-        && eq(getExcludes(), that.getExcludes()) && isFiltering() == that.isFiltering()
-        && eq(getTargetPath(), that.getTargetPath()) && eq(getEncoding(), that.getEncoding());
-  }
-
-  private static <T> boolean eq(T s1, T s2) {
-    return s1 != null ? s1.equals(s2) : s2 == null;
+    return Objects.equals(getDirectory(), that.getDirectory()) && Objects.equals(getIncludes(), that.getIncludes())
+        && Objects.equals(getExcludes(), that.getExcludes()) && isFiltering() == that.isFiltering()
+        && Objects.equals(getTargetPath(), that.getTargetPath()) && Objects.equals(getEncoding(), that.getEncoding());
   }
 
   @Override
   public int hashCode() {
-    int hash = 17;
-    hash = hash * 31 + hash(getDirectory());
-    hash = hash * 31 + hash(getIncludes());
-    hash = hash * 31 + hash(getExcludes());
-    return hash;
-  }
-
-  private static int hash(Object obj) {
-    return obj != null ? obj.hashCode() : 0;
+    return Objects.hash(getDirectory(), getIncludes(), getExcludes());
   }
 
 }

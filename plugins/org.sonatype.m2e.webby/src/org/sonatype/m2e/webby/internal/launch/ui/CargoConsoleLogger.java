@@ -5,9 +5,13 @@ import java.io.IOException;
 import org.codehaus.cargo.util.internal.log.AbstractLogger;
 import org.codehaus.cargo.util.log.LogLevel;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.ui.console.*;
+import org.eclipse.ui.console.MessageConsole;
+import org.eclipse.ui.console.MessageConsoleStream;
 import org.sonatype.m2e.webby.internal.WebbyPlugin;
 
+/**
+ * Forwards the Cargo log to the Webby console.
+ */
 public class CargoConsoleLogger extends AbstractLogger {
 
   private final MessageConsole console;
@@ -18,15 +22,10 @@ public class CargoConsoleLogger extends AbstractLogger {
 
   @Override
   protected void doLog(LogLevel level, String message, String category) {
-    MessageConsoleStream out = console.newMessageStream();
-    try {
+    try (MessageConsoleStream out = console.newMessageStream()) {
       out.println(message);
-    } finally {
-      try {
-        out.close();
-      } catch (IOException e) {
-        WebbyPlugin.log(e, IStatus.WARNING);
-      }
+    } catch (IOException e) {
+      WebbyPlugin.log(e, IStatus.WARNING);
     }
   }
 

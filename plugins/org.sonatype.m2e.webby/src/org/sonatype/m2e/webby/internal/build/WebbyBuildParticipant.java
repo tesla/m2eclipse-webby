@@ -1,22 +1,45 @@
 package org.sonatype.m2e.webby.internal.build;
 
-import java.io.*;
-import java.lang.ref.*;
-import java.util.*;
+import java.io.File;
+import java.io.IOException;
+import java.lang.ref.Reference;
+import java.lang.ref.SoftReference;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.InputLocation;
 import org.apache.maven.project.MavenProject;
-import org.eclipse.core.resources.*;
-import org.eclipse.core.runtime.*;
+import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IResourceDelta;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.m2e.core.project.IMavenProjectFacade;
 import org.eclipse.m2e.core.project.configurator.AbstractBuildParticipant;
 import org.sonatype.m2e.webby.internal.WebbyPlugin;
-import org.sonatype.m2e.webby.internal.config.*;
-import org.sonatype.m2e.webby.internal.util.*;
+import org.sonatype.m2e.webby.internal.config.OverlayConfiguration;
+import org.sonatype.m2e.webby.internal.config.WarConfiguration;
+import org.sonatype.m2e.webby.internal.config.WarConfigurationExtractor;
+import org.sonatype.m2e.webby.internal.util.MavenUtils;
+import org.sonatype.m2e.webby.internal.util.ResourceRegistry;
+import org.sonatype.m2e.webby.internal.util.WarUtils;
 import org.sonatype.plexus.build.incremental.BuildContext;
 
+/**
+ * Assembles the WAR directory (target/m2e-webby/war) of a WAR project incrementally, as part of the Maven builder.
+ */
 public class WebbyBuildParticipant extends AbstractBuildParticipant {
 
   private static final String PROP_WAR_RESOURCES = "org.sonatype.m2e.webby.war.resources";
@@ -29,14 +52,14 @@ public class WebbyBuildParticipant extends AbstractBuildParticipant {
 
       IMavenProjectFacade mvnFacade = getMavenProjectFacade();
 
-      MavenProject mvnProject = mvnFacade.getMavenProject(pm.newChild(15));
+      MavenProject mvnProject = mvnFacade.getMavenProject(pm.split(15));
 
       getBuildContext().removeMessages(mvnProject.getFile());
 
       MavenSession mvnSession = getSession();
 
       WarConfiguration warConfig = new WarConfigurationExtractor().getConfiguration(mvnFacade, mvnProject,
-          pm.newChild(15));
+          pm.split(15));
 
       Map<String, Artifact> overlayArtifacts = WarUtils.getOverlayArtifacts(mvnProject);
 
@@ -89,7 +112,7 @@ public class WebbyBuildParticipant extends AbstractBuildParticipant {
           if (resourceRegistryFile.isFile()) {
             try {
               resourceRegistry = ResourceRegistry.load(resourceRegistryFile);
-              mvnFacade.setSessionProperty(PROP_WAR_RESOURCES, new SoftReference<Object>(resourceRegistry));
+              mvnFacade.setSessionProperty(PROP_WAR_RESOURCES, new SoftReference<>(resourceRegistry));
             } catch (IOException e) {
               WebbyPlugin.log(e, IStatus.WARNING);
             }
@@ -100,11 +123,11 @@ public class WebbyBuildParticipant extends AbstractBuildParticipant {
         incremental = false;
         theDelta = null;
         resourceRegistry = new ResourceRegistry();
-        mvnFacade.setSessionProperty(PROP_WAR_RESOURCES, new SoftReference<Object>(resourceRegistry));
+        mvnFacade.setSessionProperty(PROP_WAR_RESOURCES, new SoftReference<>(resourceRegistry));
       }
 
-      Map<IProject, IResourceDelta> resDeltas = new IdentityHashMap<IProject, IResourceDelta>();
-      List<ResourceContributor> resourceContributors = new ArrayList<ResourceContributor>();
+      Map<IProject, IResourceDelta> resDeltas = new IdentityHashMap<>();
+      List<ResourceContributor> resourceContributors = new ArrayList<>();
       int overlayOrdinal = 0;
       for (OverlayConfiguration overlayConfig : warConfig.getOverlays()) {
         if (overlayConfig.isSkip()) {
@@ -151,12 +174,12 @@ public class WebbyBuildParticipant extends AbstractBuildParticipant {
       FilteringHandler filteringHandler = new FilteringHandler(warConfig, mvnProject, mvnSession);
       WarAssembler warAssembler = new WarAssembler(warDir, filteringHandler, resourceRegistry);
 
-      SubMonitor spm = SubMonitor.convert(pm.newChild(65), resourceContributors.size());
+      SubMonitor spm = SubMonitor.convert(pm.split(65), resourceContributors.size());
       for (ResourceContributor resourceContributor : resourceContributors) {
         if (pm.isCanceled()) {
           throw new OperationCanceledException();
         }
-        resourceContributor.contribute(warAssembler, spm.newChild(1));
+        resourceContributor.contribute(warAssembler, spm.split(1));
       }
 
       try {
@@ -166,10 +189,16 @@ public class WebbyBuildParticipant extends AbstractBuildParticipant {
       }
 
       if (warFolder != null) {
-        warFolder.refreshLocal(IResource.DEPTH_INFINITE, pm.newChild(5));
+        warFolder.refreshLocal(IResource.DEPTH_INFINITE, pm.split(5));
+      } else {
+        pm.worked(5);
       }
 
-      return new HashSet<IProject>(resDeltas.keySet());
+      if (warAssembler.isChanged()) {
+        OverlayDependents.scheduleUpdate(mvnFacade);
+      }
+
+      return new HashSet<>(resDeltas.keySet());
     } finally {
       if (monitor != null) {
         monitor.done();
@@ -185,14 +214,14 @@ public class WebbyBuildParticipant extends AbstractBuildParticipant {
 
       mvnFacade.setSessionProperty(PROP_WAR_RESOURCES, null);
 
-      MavenProject mvnProject = mvnFacade.getMavenProject(pm.newChild(30));
+      MavenProject mvnProject = mvnFacade.getMavenProject(pm.split(30));
 
       String workDir = new WarConfigurationExtractor().getWorkDirectory(mvnProject);
 
       IFolder workFolder = getFolder(workDir);
 
       if (workFolder != null) {
-        workFolder.delete(true, pm.newChild(70));
+        workFolder.delete(true, pm.split(70));
       }
     } finally {
       if (monitor != null) {
@@ -217,7 +246,7 @@ public class WebbyBuildParticipant extends AbstractBuildParticipant {
     InputLocation location = new WarConfigurationExtractor().getConfigurationLocation(mvnProject);
     if (location != null && location.getSource() != null) {
       String modelId = mvnProject.getGroupId() + ":" + mvnProject.getArtifactId() + ':' + mvnProject.getVersion();
-      if (location.getSource().getModelId().equals(modelId)) {
+      if (modelId.equals(location.getSource().getModelId())) {
         line = location.getLineNumber();
         column = location.getColumnNumber();
       }

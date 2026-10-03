@@ -1,22 +1,29 @@
 package org.sonatype.m2e.webby.internal.launch.ui;
 
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.debug.core.*;
+import org.eclipse.debug.core.ILaunchConfiguration;
+import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.ui.StringVariableSelectionDialog;
 import org.eclipse.jdt.debug.ui.launchConfigurations.JavaLaunchTab;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.*;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.layout.*;
-import org.eclipse.swt.widgets.*;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Text;
 import org.sonatype.m2e.webby.internal.launch.WebbyLaunchConstants;
 
+/**
+ * Lists the properties files, one per line, whose content is passed as system properties to the container JVM.
+ */
 public class SystemPropertiesFileBlock extends JavaLaunchTab {
 
   private Text sysPropsFiles;
 
-  private Button variableButton;
-
+  @Override
   public void createControl(Composite parent) {
     Font font = parent.getFont();
 
@@ -31,54 +38,41 @@ public class SystemPropertiesFileBlock extends JavaLaunchTab {
     group.setText("System Properties Files:");
 
     sysPropsFiles = new Text(group, SWT.MULTI | SWT.WRAP | SWT.BORDER | SWT.V_SCROLL);
-    sysPropsFiles.addTraverseListener(new TraverseListener() {
-      public void keyTraversed(TraverseEvent e) {
-        switch (e.detail) {
-          case SWT.TRAVERSE_ESCAPE:
-          case SWT.TRAVERSE_PAGE_NEXT:
-          case SWT.TRAVERSE_PAGE_PREVIOUS:
+    sysPropsFiles.addTraverseListener(e -> {
+      switch (e.detail) {
+        case SWT.TRAVERSE_ESCAPE, SWT.TRAVERSE_PAGE_NEXT, SWT.TRAVERSE_PAGE_PREVIOUS -> e.doit = true;
+        case SWT.TRAVERSE_RETURN, SWT.TRAVERSE_TAB_NEXT, SWT.TRAVERSE_TAB_PREVIOUS -> {
+          if (!sysPropsFiles.isEnabled() || (e.stateMask & SWT.MODIFIER_MASK) != 0) {
             e.doit = true;
-            break;
-          case SWT.TRAVERSE_RETURN:
-          case SWT.TRAVERSE_TAB_NEXT:
-          case SWT.TRAVERSE_TAB_PREVIOUS:
-            if ((sysPropsFiles.getStyle() & SWT.SINGLE) != 0) {
-              e.doit = true;
-            } else {
-              if (!sysPropsFiles.isEnabled() || (e.stateMask & SWT.MODIFIER_MASK) != 0) {
-                e.doit = true;
-              }
-            }
-            break;
+          }
+        }
+        default -> {
+          // keep the default behavior
         }
       }
     });
-    sysPropsFiles.addModifyListener(new ModifyListener() {
-      public void modifyText(ModifyEvent e) {
-        updateLaunchConfigurationDialog();
-      }
-    });
+    sysPropsFiles.addModifyListener(e -> updateLaunchConfigurationDialog());
+    sysPropsFiles.setData(WebbyTab.WIDGET_ID_KEY, "webby.sysPropsFiles");
     gd = new GridData(GridData.FILL_BOTH);
     gd.heightHint = 40;
     gd.widthHint = 100;
     sysPropsFiles.setLayoutData(gd);
     sysPropsFiles.setFont(font);
 
-    variableButton = createPushButton(group, "Variables...", null);
+    Button variableButton = createPushButton(group, "Variables...", null);
     variableButton.setFont(font);
     variableButton.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));
-    variableButton.addSelectionListener(new SelectionAdapter() {
-      public void widgetSelected(SelectionEvent e) {
-        StringVariableSelectionDialog dialog = new StringVariableSelectionDialog(getShell());
-        dialog.open();
-        String variable = dialog.getVariableExpression();
-        if (variable != null) {
-          sysPropsFiles.insert(variable);
-        }
+    variableButton.addSelectionListener(SelectionListener.widgetSelectedAdapter(e -> {
+      StringVariableSelectionDialog dialog = new StringVariableSelectionDialog(getShell());
+      dialog.open();
+      String variable = dialog.getVariableExpression();
+      if (variable != null) {
+        sysPropsFiles.insert(variable);
       }
-    });
+    }));
   }
 
+  @Override
   public void setDefaults(ILaunchConfigurationWorkingCopy configuration) {
     configuration.setAttribute(WebbyLaunchConstants.ATTR_SYS_PROP_FILES, (String) null);
   }
@@ -94,14 +88,16 @@ public class SystemPropertiesFileBlock extends JavaLaunchTab {
     this.sysPropsFiles.setText(sysPropFiles);
   }
 
+  @Override
   public void performApply(ILaunchConfigurationWorkingCopy config) {
     String content = sysPropsFiles.getText().trim();
-    if (content.length() <= 0) {
+    if (content.isEmpty()) {
       content = null;
     }
     config.setAttribute(WebbyLaunchConstants.ATTR_SYS_PROP_FILES, content);
   }
 
+  @Override
   public String getName() {
     return "System Properties Files";
   }

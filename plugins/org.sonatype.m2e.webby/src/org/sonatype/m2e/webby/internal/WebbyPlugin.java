@@ -1,12 +1,16 @@
 package org.sonatype.m2e.webby.internal;
 
-import org.eclipse.core.runtime.*;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 import org.sonatype.m2e.webby.internal.launch.WebbyLaunchConfigurationListener;
 
 public class WebbyPlugin extends AbstractUIPlugin {
+
+  public static final String PLUGIN_ID = "org.sonatype.m2e.webby";
 
   private static WebbyPlugin plugin;
 
@@ -42,11 +46,11 @@ public class WebbyPlugin extends AbstractUIPlugin {
   }
 
   public static String getPluginId() {
-    return getDefault().getBundle().getSymbolicName();
+    return PLUGIN_ID;
   }
 
   public static IStatus newStatus(String msg, Throwable cause) {
-    return new Status(IStatus.ERROR, getPluginId(), msg, cause);
+    return new Status(IStatus.ERROR, PLUGIN_ID, msg, cause);
   }
 
   public static CoreException newError(String msg, Throwable cause) {
@@ -58,27 +62,22 @@ public class WebbyPlugin extends AbstractUIPlugin {
   }
 
   public static void log(Throwable e, int severity) {
-    WebbyPlugin plugin = getDefault();
-    if (plugin == null || e == null) {
-      return;
+    if (e != null) {
+      log(new Status(severity, PLUGIN_ID, e.getMessage(), e));
     }
-    plugin.getLog().log(new Status(severity, getPluginId(), e.getMessage(), e));
   }
 
   public static void log(String msg, int severity) {
-    WebbyPlugin plugin = getDefault();
-    if (plugin == null || msg == null) {
-      return;
+    if (msg != null) {
+      log(new Status(severity, PLUGIN_ID, msg));
     }
-    plugin.getLog().log(new Status(severity, getPluginId(), msg));
   }
 
   public static void log(IStatus status) {
     WebbyPlugin plugin = getDefault();
-    if (plugin == null || status == null) {
-      return;
+    if (plugin != null && status != null) {
+      plugin.getLog().log(status);
     }
-    plugin.getLog().log(status);
   }
 
   public WebAppRegistry getWebAppRegistry() {

@@ -11,6 +11,9 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.jdt.launching.IVMRunner;
 
+/**
+ * Runs the container (server) JVM as part of the Eclipse launch, auxiliary JVMs (e.g. shutdown) as plain processes.
+ */
 public class EclipseJvmLauncherFactory implements JvmLauncherFactory {
 
   private final JvmLauncherFactory defaultJvmLauncherFactory = new DefaultJvmLauncherFactory();
@@ -23,12 +26,12 @@ public class EclipseJvmLauncherFactory implements JvmLauncherFactory {
 
   private final String[] envVariables;
 
+  private final Map<String, Object> vmSpecificAttributesMap;
+
   private final IProgressMonitor monitor;
 
-  private Map<String, Object> vmSpecificAttributesMap;
-
-  public EclipseJvmLauncherFactory(IVMRunner runner, ILaunch launch, File workingDirectory, String[] envVariables, Map<String, Object> vmSpecificAttributesMap,
-      IProgressMonitor monitor) {
+  public EclipseJvmLauncherFactory(IVMRunner runner, ILaunch launch, File workingDirectory, String[] envVariables,
+      Map<String, Object> vmSpecificAttributesMap, IProgressMonitor monitor) {
     this.runner = runner;
     this.launch = launch;
     this.workingDirectory = workingDirectory;
@@ -37,11 +40,11 @@ public class EclipseJvmLauncherFactory implements JvmLauncherFactory {
     this.monitor = monitor;
   }
 
+  @Override
   public JvmLauncher createJvmLauncher(JvmLauncherRequest request) {
     if (!request.isServer()) {
       return defaultJvmLauncherFactory.createJvmLauncher(request);
     }
-
     return new EclipseJvmLauncher(runner, launch, workingDirectory, envVariables, vmSpecificAttributesMap, monitor);
   }
 

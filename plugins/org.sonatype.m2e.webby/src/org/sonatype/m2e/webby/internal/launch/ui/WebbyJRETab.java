@@ -1,22 +1,29 @@
 package org.sonatype.m2e.webby.internal.launch.ui;
 
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.debug.core.*;
+import org.eclipse.debug.core.ILaunchConfiguration;
+import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.ui.ILaunchConfigurationDialog;
 import org.eclipse.jdt.debug.ui.launchConfigurations.JavaJRETab;
 import org.eclipse.jdt.internal.debug.ui.launcher.VMArgumentsBlock;
-import org.eclipse.jdt.launching.*;
+import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
+import org.eclipse.jdt.launching.IVMInstall;
+import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 
+/**
+ * The JRE tab, extended with the VM arguments and the system properties files.
+ */
 @SuppressWarnings("restriction")
 public class WebbyJRETab extends JavaJRETab {
 
-  private VMArgumentsBlock vmArgumentsBlock = new VMArgumentsBlock();
+  private final VMArgumentsBlock vmArgumentsBlock = new VMArgumentsBlock();
 
-  private SystemPropertiesFileBlock sysPropsFile = new SystemPropertiesFileBlock();
+  private final SystemPropertiesFileBlock sysPropsFile = new SystemPropertiesFileBlock();
 
+  @Override
   public void createControl(Composite parent) {
     super.createControl(parent);
 
@@ -31,6 +38,7 @@ public class WebbyJRETab extends JavaJRETab {
     ((GridData) sysPropsFile.getControl().getLayoutData()).horizontalSpan = 2;
   }
 
+  @Override
   public void performApply(ILaunchConfigurationWorkingCopy configuration) {
     super.performApply(configuration);
     vmArgumentsBlock.performApply(configuration);
@@ -38,22 +46,26 @@ public class WebbyJRETab extends JavaJRETab {
     setLaunchConfigurationWorkingCopy(configuration);
   }
 
+  @Override
   public void initializeFrom(ILaunchConfiguration configuration) {
     super.initializeFrom(configuration);
     vmArgumentsBlock.initializeFrom(configuration);
     sysPropsFile.initializeFrom(configuration);
   }
 
+  @Override
   public void setLaunchConfigurationDialog(ILaunchConfigurationDialog dialog) {
     super.setLaunchConfigurationDialog(dialog);
     vmArgumentsBlock.setLaunchConfigurationDialog(dialog);
     sysPropsFile.setLaunchConfigurationDialog(dialog);
   }
 
+  @Override
   public void activated(ILaunchConfigurationWorkingCopy workingCopy) {
     setLaunchConfigurationWorkingCopy(workingCopy);
   }
 
+  @Override
   public void setDefaults(ILaunchConfigurationWorkingCopy config) {
     super.setDefaults(config);
     IVMInstall defaultVMInstall = getDefaultVMInstall(config);

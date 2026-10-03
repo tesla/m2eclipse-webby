@@ -4,15 +4,15 @@ import java.io.File;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.project.MavenProject;
-import org.eclipse.core.runtime.*;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.sonatype.m2e.webby.internal.config.WarConfiguration;
 import org.sonatype.m2e.webby.internal.util.FilenameMapper;
 
 public class MainClasspathContributor extends ClasspathContributor {
 
-  private MavenProject mvnProject;
+  private final MavenProject mvnProject;
 
-  private WarConfiguration warConfig;
+  private final WarConfiguration warConfig;
 
   public MainClasspathContributor(MavenProject mvnProject, WarConfiguration warConfig) {
     super(0);
@@ -21,7 +21,7 @@ public class MainClasspathContributor extends ClasspathContributor {
   }
 
   @Override
-  public void contribute(WarClasspath classpath, IProgressMonitor monitor) throws CoreException {
+  public void contribute(WarClasspath classpath, IProgressMonitor monitor) {
     try {
       classpath.addRuntimeClasspathEntry(new File(warConfig.getClassesDirectory()));
 

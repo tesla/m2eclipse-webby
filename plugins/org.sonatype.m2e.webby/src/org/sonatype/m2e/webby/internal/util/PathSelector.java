@@ -1,12 +1,19 @@
 package org.sonatype.m2e.webby.internal.util;
 
 import java.io.File;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.codehaus.plexus.util.SelectorUtils;
 
+/**
+ * Matches paths against Ant-style include/exclude patterns.
+ */
 public class PathSelector {
+
+  private static final Pattern SEPARATORS = Pattern.compile("[\\\\/]");
 
   private final String[] includes;
 
@@ -46,8 +53,11 @@ public class PathSelector {
     return normalized;
   }
 
+  /**
+   * @return the path using the platform file separator
+   */
   public static String normalizePath(String path) {
-    return path.replaceAll("[\\/]", Matcher.quoteReplacement(File.separator));
+    return SEPARATORS.matcher(path).replaceAll(Matcher.quoteReplacement(File.separator));
   }
 
   public boolean isSelected(String pathname) {
@@ -55,10 +65,7 @@ public class PathSelector {
     if (includes.length > 0 && !isMatched(normalized, includes)) {
       return false;
     }
-    if (excludes.length > 0 && isMatched(normalized, excludes)) {
-      return false;
-    }
-    return true;
+    return excludes.length == 0 || !isMatched(normalized, excludes);
   }
 
   private static boolean isMatched(String pathname, String[] patterns) {
@@ -72,11 +79,12 @@ public class PathSelector {
   }
 
   public boolean isAncestorOfPotentiallySelected(String pathname) {
-    if (includes.length <= 0) {
+    if (includes.length == 0) {
       return true;
     }
+    String normalized = normalizePath(pathname);
     for (String include : includes) {
-      if (SelectorUtils.matchPatternStart(include, pathname)) {
+      if (SelectorUtils.matchPatternStart(include, normalized)) {
         return true;
       }
     }

@@ -1,21 +1,20 @@
 package org.sonatype.m2e.webby.internal.launch;
 
 import java.io.File;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.sonatype.m2e.webby.internal.util.ResourceRegistry;
 
 public class WarClasspath {
 
-  private Set<File> runtimeClasspath = new LinkedHashSet<File>();
+  private final Set<File> runtimeClasspath = new LinkedHashSet<>();
 
-  private Set<File> providedClasspath = new LinkedHashSet<File>();
+  private final Set<File> providedClasspath = new LinkedHashSet<>();
 
-  private ResourceRegistry resourceRegistry;
-
-  public WarClasspath() {
-    this.resourceRegistry = new ResourceRegistry();
-  }
+  private final ResourceRegistry resourceRegistry = new ResourceRegistry();
 
   public boolean registerTargetPath(String targetPath, int overlayOrdinal) {
     return resourceRegistry.register(targetPath, overlayOrdinal);
@@ -30,11 +29,11 @@ public class WarClasspath {
   }
 
   public Collection<File> getRuntimeClasspath() {
-    return runtimeClasspath;
+    return Collections.unmodifiableSet(runtimeClasspath);
   }
 
   public Collection<File> getProvidedClasspath() {
-    return providedClasspath;
+    return Collections.unmodifiableSet(providedClasspath);
   }
 
 }

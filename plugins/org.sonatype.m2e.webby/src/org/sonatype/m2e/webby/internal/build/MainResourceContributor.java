@@ -1,28 +1,44 @@
 package org.sonatype.m2e.webby.internal.build;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.project.MavenProject;
-import org.eclipse.core.resources.*;
-import org.eclipse.core.runtime.*;
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResourceDelta;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.m2e.core.project.IMavenProjectFacade;
-import org.sonatype.m2e.webby.internal.config.*;
-import org.sonatype.m2e.webby.internal.util.*;
+import org.sonatype.m2e.webby.internal.config.ResourceConfiguration;
+import org.sonatype.m2e.webby.internal.config.WarConfiguration;
+import org.sonatype.m2e.webby.internal.util.FilenameMapper;
+import org.sonatype.m2e.webby.internal.util.PathCollector;
+import org.sonatype.m2e.webby.internal.util.PathSelector;
 
+/**
+ * Contributes the resources of the WAR project itself: web resources, web.xml and dependencies that are not
+ * libraries (e.g. TLDs).
+ */
 public class MainResourceContributor extends ResourceContributor {
 
   private static final String WEB_XML = "WEB-INF/web.xml";
 
-  private IProject project;
+  private final IProject project;
 
-  private MavenProject mvnProject;
+  private final MavenProject mvnProject;
 
-  private WarConfiguration warConfig;
+  private final WarConfiguration warConfig;
 
-  private IResourceDelta resDelta;
+  private final IResourceDelta resDelta;
 
   public MainResourceContributor(int ordinal, IMavenProjectFacade mvnFacade, WarConfiguration warConfig,
       IResourceDelta resDelta) {
@@ -33,6 +49,7 @@ public class MainResourceContributor extends ResourceContributor {
     this.resDelta = resDelta;
   }
 
+  @Override
   public void contribute(WarAssembler assembler, IProgressMonitor monitor) {
     try {
       PathSelector packagingSelector = new PathSelector(warConfig.getPackagingIncludes(),
@@ -74,13 +91,8 @@ public class MainResourceContributor extends ResourceContributor {
           }
           if (assembler.registerTargetPath(targetPath, ordinal)) {
             File sourceFile = new File(basedir, file);
-            try {
-              InputStream is = getInputStream(sourceFile, file, resDelta);
-              try {
-                assembler.copyResourceFile(is, targetPath, filtering, encoding, sourceFile.lastModified());
-              } finally {
-                is.close();
-              }
+            try (InputStream is = getInputStream(sourceFile, file)) {
+              assembler.copyResourceFile(is, targetPath, filtering, encoding, sourceFile.lastModified());
             } catch (IOException e) {
               assembler.addError(sourceFile.getAbsolutePath(), targetPath, e);
             }
@@ -92,13 +104,8 @@ public class MainResourceContributor extends ResourceContributor {
       if (webXml != null) {
         if (resDelta == null || ResourceDeltaUtils.findChildDelta(resDelta, project, webXml) != null) {
           if (new File(webXml).exists()) {
-            try {
-              InputStream is = new FileInputStream(webXml);
-              try {
-                assembler.copyResourceFile(is, WEB_XML, warConfig.isWebXmlFiltered(), null, 0);
-              } finally {
-                is.close();
-              }
+            try (InputStream is = Files.newInputStream(new File(webXml).toPath())) {
+              assembler.copyResourceFile(is, WEB_XML, warConfig.isWebXmlFiltered(), null, 0);
             } catch (IOException e) {
               assembler.addError(webXml, WEB_XML, e);
             }
@@ -108,7 +115,7 @@ public class MainResourceContributor extends ResourceContributor {
         }
       }
 
-      if (resDelta == null || resDelta.findMember(Path.fromOSString(mvnProject.getFile().getName())) != null) {
+      if (resDelta == null || resDelta.findMember(IPath.fromOSString(mvnProject.getFile().getName())) != null) {
         FilenameMapper filenameMapper = new FilenameMapper(warConfig.getFilenameMapping());
         Map<String, Artifact> targetPaths = filenameMapper.getTargetPaths(mvnProject.getArtifacts());
         for (Map.Entry<String, Artifact> entry : targetPaths.entrySet()) {
@@ -118,13 +125,8 @@ public class MainResourceContributor extends ResourceContributor {
           }
           String targetPath = entry.getKey();
           if (!targetPath.startsWith("WEB-INF/lib/") && packagingSelector.isSelected(targetPath)) {
-            try {
-              InputStream is = new FileInputStream(file);
-              try {
-                assembler.copyResourceFile(is, targetPath, false, null, file.lastModified());
-              } finally {
-                is.close();
-              }
+            try (InputStream is = Files.newInputStream(file.toPath())) {
+              assembler.copyResourceFile(is, targetPath, false, null, file.lastModified());
             } catch (IOException e) {
               assembler.addError(file.getAbsolutePath(), targetPath, e);
             }
@@ -138,42 +140,40 @@ public class MainResourceContributor extends ResourceContributor {
     }
   }
 
-  private InputStream getInputStream(File sourceFile, String file, IResourceDelta resDelta) throws FileNotFoundException {
-    InputStream is = null;
+  /**
+   * Opens a source file, falling back to the workspace for files of linked/virtual folders.
+   */
+  private InputStream getInputStream(File sourceFile, String file) throws IOException {
     try {
-      is = new FileInputStream(sourceFile);
-    } catch (FileNotFoundException e) {
-      try {
-        // Fix for virtual folder
-        AtomicReference<IFile> _file = new AtomicReference<>();
-        resDelta.accept(new IResourceDeltaVisitor() {
-          @Override
-          public boolean visit(IResourceDelta delta) throws CoreException {
-            if (_file.get() != null) {
-              return false;
-            }
-            if (delta.getResource() instanceof IFile) {
-              IFile res = (IFile) delta.getResource();
-              if (res.getFullPath().toOSString().contains(file)) {
-                _file.set(res);
-              }
-            }
-            return true;
-          }
-        });
-        if (_file.get() != null) {
-          return _file.get().getContents();
-        }
-      } catch (CoreException e1) {
+      return Files.newInputStream(sourceFile.toPath());
+    } catch (NoSuchFileException e) {
+      if (resDelta == null) {
         throw e;
       }
+      AtomicReference<IFile> found = new AtomicReference<>();
+      try {
+        resDelta.accept(delta -> {
+          if (found.get() != null) {
+            return false;
+          }
+          if (delta.getResource() instanceof IFile res && res.getFullPath().toOSString().contains(file)) {
+            found.set(res);
+          }
+          return true;
+        });
+        if (found.get() != null) {
+          return found.get().getContents();
+        }
+      } catch (CoreException ce) {
+        e.addSuppressed(ce);
+      }
+      throw e;
     }
-    return is;
   }
 
   private String getWebXml() {
     String webXml = warConfig.getWebXml();
-    if (webXml != null && webXml.length() > 0) {
+    if (webXml != null && !webXml.isEmpty()) {
       return webXml;
     } else if (!warConfig.getResources().isEmpty()) {
       File file = new File(warConfig.getResources().get(0).getDirectory(), WEB_XML);

@@ -2,11 +2,15 @@ package org.sonatype.m2e.webby.internal.build;
 
 import java.io.File;
 
-import org.eclipse.core.resources.*;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.m2e.core.project.MavenProjectUtils;
 
-class ResourceDeltaUtils {
+final class ResourceDeltaUtils {
+
+  private ResourceDeltaUtils() {
+  }
 
   public static IResourceDelta findChildDelta(IResourceDelta resDelta, IProject project, String path) {
     IResourceDelta childDelta = null;

@@ -1,9 +1,14 @@
 package org.sonatype.m2e.webby.internal.util;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.apache.maven.artifact.Artifact;
 
+/**
+ * Computes the location of dependencies in the WAR, like the maven-war-plugin with its outputFileNameMapping.
+ */
 public class FilenameMapper {
 
   private final String filenameMapping;
@@ -19,7 +24,7 @@ public class FilenameMapper {
     props.put("@{version}@", emptify(artifact.getVersion()));
     props.put("@{baseVersion}@", emptify(artifact.getBaseVersion()));
     props.put("@{classifier}@", emptify(artifact.getClassifier()));
-    if (props.get("@{classifier}@").length() <= 0) {
+    if (props.get("@{classifier}@").isEmpty()) {
       props.put("@{dashClassifier?}@", "");
       props.put("@{dashClassifier}@", "");
     } else {
@@ -38,7 +43,7 @@ public class FilenameMapper {
     return result;
   }
 
-  private String emptify(String str) {
+  private static String emptify(String str) {
     return (str == null) ? "" : str;
   }
 
@@ -75,18 +80,16 @@ public class FilenameMapper {
     }
 
     String type = artifact.getType();
-    if ("tld".equals(type)) {
-      return "WEB-INF/tld/";
-    } else if ("aar".equals(type)) {
-      return "WEB-INF/services/";
-    } else if ("mar".equals(type)) {
-      return "WEB-INF/modules/";
-    } else if ("jar".equals(type) || "ejb".equals(type) || "ejb-client".equals(type) || "test-jar".equals(type)
-        || "par".equals(type)) {
-      return "WEB-INF/lib/";
+    if (type == null) {
+      return null;
     }
-
-    return null;
+    return switch (type) {
+      case "tld" -> "WEB-INF/tld/";
+      case "aar" -> "WEB-INF/services/";
+      case "mar" -> "WEB-INF/modules/";
+      case "jar", "ejb", "ejb-client", "test-jar", "par" -> "WEB-INF/lib/";
+      default -> null;
+    };
   }
 
 }

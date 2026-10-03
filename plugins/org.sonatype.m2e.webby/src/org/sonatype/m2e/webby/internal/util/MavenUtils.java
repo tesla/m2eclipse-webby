@@ -4,7 +4,11 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.m2e.core.project.IMavenProjectFacade;
 
-public class MavenUtils {
+public final class MavenUtils {
+
+  private MavenUtils() {
+  }
+
   public static IMavenProjectFacade getFacade(IProject project) {
     return MavenPlugin.getMavenProjectRegistry().getProject(project);
   }

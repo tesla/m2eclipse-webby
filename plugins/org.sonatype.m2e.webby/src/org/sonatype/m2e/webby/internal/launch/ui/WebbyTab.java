@@ -1,39 +1,62 @@
 package org.sonatype.m2e.webby.internal.launch.ui;
 
-import java.util.*;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
 
 import org.codehaus.cargo.container.ContainerType;
-import org.codehaus.cargo.generic.DefaultContainerFactory;
-import org.eclipse.core.resources.*;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.debug.core.*;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.debug.core.ILaunchConfiguration;
+import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
 import org.eclipse.debug.internal.ui.SWTFactory;
 import org.eclipse.debug.ui.StringVariableSelectionDialog;
-import org.eclipse.jdt.core.*;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.debug.ui.launchConfigurations.JavaLaunchTab;
 import org.eclipse.jdt.internal.debug.ui.launcher.LauncherMessages;
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
 import org.eclipse.jdt.ui.JavaElementLabelProvider;
-import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.*;
-import org.eclipse.swt.graphics.*;
-import org.eclipse.swt.layout.*;
-import org.eclipse.swt.widgets.*;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.DirectoryDialog;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Spinner;
+import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Widget;
 import org.eclipse.ui.dialogs.ElementListSelectionDialog;
-import org.sonatype.m2e.webby.internal.*;
+import org.sonatype.m2e.webby.internal.WebbyImages;
+import org.sonatype.m2e.webby.internal.WebbyPlugin;
+import org.sonatype.m2e.webby.internal.launch.SupportedContainers;
 import org.sonatype.m2e.webby.internal.launch.WebbyLaunchConstants;
 
+/**
+ * Main tab of the Webby launch configuration: the web application and the servlet container to run it in.
+ */
 @SuppressWarnings("restriction")
 public class WebbyTab extends JavaLaunchTab {
 
-  private static final Set<String> SUPPORTED_SERVERS = Set.of("jetty9x", "jetty10x", "jetty11x", "tomcat8x", "tomcat9x", "tomcat10x", "tomcat11x", "tomee8x", "tomee9x", "glassfish5x",
-      "glassfish6x", "glassfish7x");
+  /** Key under which the widgets are tagged for UI tests, it is the default key of SWTBot. */
+  static final String WIDGET_ID_KEY = "org.eclipse.swtbot.widget.key";
+
+  static final String[] LOG_LEVELS = { "low", "medium", "high" };
 
   private Text projectName;
-
-  private Button projectNameBrowse;
 
   private Text contextName;
 
@@ -64,6 +87,7 @@ public class WebbyTab extends JavaLaunchTab {
     return "org.sonatype.m2e.webby.ui.mainTab"; //$NON-NLS-1$
   }
 
+  @Override
   public void createControl(Composite parent) {
     Composite comp = SWTFactory.createComposite(parent, parent.getFont(), 1, 1, GridData.FILL_BOTH);
     createApplicationEditor(comp);
@@ -84,74 +108,41 @@ public class WebbyTab extends JavaLaunchTab {
     new Label(group, SWT.LEFT).setText("Project:");
 
     projectName = new Text(group, SWT.SINGLE | SWT.BORDER);
-    projectName.addModifyListener(new ModifyListener() {
-      public void modifyText(ModifyEvent e) {
-        updateLaunchConfigurationDialog();
-      }
-    });
+    projectName.addModifyListener(e -> updateLaunchConfigurationDialog());
     projectName.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
     projectName.setFont(font);
+    tag(projectName, "projectName");
 
-    projectNameBrowse = createPushButton(group, LauncherMessages.AbstractJavaMainTab_1, null);
-    projectNameBrowse.addSelectionListener(new SelectionAdapter() {
-      public void widgetSelected(SelectionEvent e) {
-        IJavaProject project = chooseJavaProject();
-        if (project != null) {
-          projectName.setText(project.getElementName());
-        }
+    Button projectNameBrowse = createPushButton(group, LauncherMessages.AbstractJavaMainTab_1, null);
+    projectNameBrowse.addSelectionListener(SelectionListener.widgetSelectedAdapter(e -> {
+      IJavaProject project = chooseJavaProject();
+      if (project != null) {
+        projectName.setText(project.getElementName());
       }
-    });
+    }));
+    tag(projectNameBrowse, "projectNameBrowse");
 
     new Label(group, SWT.LEFT).setText("Context:");
 
     contextName = new Text(group, SWT.SINGLE | SWT.BORDER);
-    contextName.addModifyListener(new ModifyListener() {
-      public void modifyText(ModifyEvent e) {
-        updateLaunchConfigurationDialog();
-      }
-    });
+    contextName.addModifyListener(e -> updateLaunchConfigurationDialog());
     contextName.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
     contextName.setFont(font);
+    tag(contextName, "contextName");
 
-    Label lbl = new Label(group, SWT.NONE);
-    lbl.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
+    new Label(group, SWT.NONE).setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false));
 
     new Label(group, SWT.LEFT).setText("Open when started:");
 
     openWhenStarted = new Button(group, SWT.CHECK);
     openWhenStarted.setFont(font);
     openWhenStarted.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-    openWhenStarted.addSelectionListener(new SelectionListener() {
-
-      @Override
-      public void widgetSelected(SelectionEvent e) {
-        updateLaunchConfigurationDialog();
-      }
-
-      @Override
-      public void widgetDefaultSelected(SelectionEvent e) {
-        updateLaunchConfigurationDialog();
-      }
-    });
+    openWhenStarted.addSelectionListener(SelectionListener.widgetSelectedAdapter(e -> updateLaunchConfigurationDialog()));
+    tag(openWhenStarted, "openWhenStarted");
   }
 
   private void createContainerEditor(Composite parent) {
-    containers = new TreeMap<String, SortedSet<String>>();
-    for (Map.Entry<String, Set<ContainerType>> entry : new DefaultContainerFactory().getContainerIds().entrySet()) {
-      if (!SUPPORTED_SERVERS.contains(entry.getKey())) {
-        continue;
-      }
-      SortedSet<String> types = new TreeSet<>();
-      for (ContainerType type : entry.getValue()) {
-        if (ContainerType.REMOTE.equals(type) || ContainerType.EMBEDDED.equals(type)) {
-          continue;
-        }
-        types.add(type.getType());
-      }
-      if (!types.isEmpty()) {
-        containers.put(entry.getKey(), types);
-      }
-    }
+    containers = SupportedContainers.getAvailableContainers();
 
     Font font = parent.getFont();
 
@@ -163,30 +154,27 @@ public class WebbyTab extends JavaLaunchTab {
 
     new Label(group, SWT.LEFT).setText("Provider:");
 
-    containerId = new Combo(group, SWT.VERTICAL | SWT.DROP_DOWN | SWT.BORDER | SWT.READ_ONLY);
+    containerId = new Combo(group, SWT.DROP_DOWN | SWT.BORDER | SWT.READ_ONLY);
     containerId.setFont(font);
     containerId.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 4, 1));
-    for (String id : containers.keySet()) {
-      containerId.add(id);
-    }
-    containerId.addSelectionListener(new SelectionAdapter() {
-      public void widgetSelected(SelectionEvent e) {
-        updateContainerTypes();
-        updateLaunchConfigurationDialog();
-      }
-    });
+    containers.keySet().forEach(containerId::add);
+    containerId.setVisibleItemCount(Math.min(containerId.getItemCount(), 20));
+    containerId.addSelectionListener(SelectionListener.widgetSelectedAdapter(e -> {
+      updateContainerTypes();
+      updateLaunchConfigurationDialog();
+    }));
+    tag(containerId, "containerId");
 
     new Label(group, SWT.LEFT).setText("Type:");
 
-    containerType = new Combo(group, SWT.VERTICAL | SWT.DROP_DOWN | SWT.BORDER | SWT.READ_ONLY);
+    containerType = new Combo(group, SWT.DROP_DOWN | SWT.BORDER | SWT.READ_ONLY);
     containerType.setFont(font);
     containerType.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false));
-    containerType.addSelectionListener(new SelectionAdapter() {
-      public void widgetSelected(SelectionEvent e) {
-        updateContainerHome();
-        updateLaunchConfigurationDialog();
-      }
-    });
+    containerType.addSelectionListener(SelectionListener.widgetSelectedAdapter(e -> {
+      updateContainerHome();
+      updateLaunchConfigurationDialog();
+    }));
+    tag(containerType, "containerType");
 
     SWTFactory.createHorizontalSpacer(group, 3);
 
@@ -195,99 +183,53 @@ public class WebbyTab extends JavaLaunchTab {
     containerHome = new Text(group, SWT.SINGLE | SWT.BORDER);
     containerHome.setFont(font);
     containerHome.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-    containerHome.addModifyListener(new ModifyListener() {
-      public void modifyText(ModifyEvent e) {
-        updateLaunchConfigurationDialog();
-      }
-    });
+    containerHome.addModifyListener(e -> updateLaunchConfigurationDialog());
+    tag(containerHome, "containerHome");
 
     containerHomeVariables = createPushButton(group, "Variables...", null);
-    containerHomeVariables.addSelectionListener(new SelectionAdapter() {
-
-      public void widgetSelected(SelectionEvent e) {
-        StringVariableSelectionDialog dialog = new StringVariableSelectionDialog(getShell());
-        dialog.open();
-        String variable = dialog.getVariableExpression();
-        if (variable != null) {
-          containerHome.insert(variable);
-        }
+    containerHomeVariables.addSelectionListener(SelectionListener.widgetSelectedAdapter(e -> {
+      StringVariableSelectionDialog dialog = new StringVariableSelectionDialog(getShell());
+      dialog.open();
+      String variable = dialog.getVariableExpression();
+      if (variable != null) {
+        containerHome.insert(variable);
       }
-
-    });
+    }));
+    tag(containerHomeVariables, "containerHomeVariables");
 
     containerHomeBrowse = createPushButton(group, LauncherMessages.AbstractJavaMainTab_1, null);
-    containerHomeBrowse.addSelectionListener(new SelectionAdapter() {
-
-      public void widgetSelected(SelectionEvent e) {
-        String path = chooseContainerHome();
-        if (path != null) {
-          containerHome.setText(path);
-        }
+    containerHomeBrowse.addSelectionListener(SelectionListener.widgetSelectedAdapter(e -> {
+      String path = chooseContainerHome();
+      if (path != null) {
+        containerHome.setText(path);
       }
-
-    });
+    }));
+    tag(containerHomeBrowse, "containerHomeBrowse");
 
     new Label(group, SWT.LEFT).setText("Logging:");
 
-    containerLogging = new Combo(group, SWT.VERTICAL | SWT.DROP_DOWN | SWT.BORDER | SWT.READ_ONLY);
+    containerLogging = new Combo(group, SWT.DROP_DOWN | SWT.BORDER | SWT.READ_ONLY);
     containerLogging.setFont(font);
     containerLogging.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
-    containerLogging.add("low");
-    containerLogging.add("medium");
-    containerLogging.add("high");
-    containerLogging.select(1);
-    containerLogging.addSelectionListener(new SelectionAdapter() {
-      public void widgetSelected(SelectionEvent e) {
-        updateLaunchConfigurationDialog();
-      }
-    });
+    containerLogging.setItems(LOG_LEVELS);
+    select(containerLogging, WebbyLaunchConstants.DEFAULT_LOG_LEVEL, null);
+    containerLogging.addSelectionListener(SelectionListener.widgetSelectedAdapter(e -> updateLaunchConfigurationDialog()));
+    tag(containerLogging, "containerLogging");
 
     SWTFactory.createHorizontalSpacer(group, 3);
 
     new Label(group, SWT.LEFT).setText("Port:");
 
-    containerPort = new Spinner(group, SWT.SINGLE | SWT.BORDER);
-    containerPort.setFont(font);
-    containerPort.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
-    containerPort.setMinimum(1);
-    containerPort.setMaximum(65535);
-    containerPort.setPageIncrement(10);
-    containerPort.addModifyListener(new ModifyListener() {
-      public void modifyText(ModifyEvent e) {
-        updateLaunchConfigurationDialog();
-      }
-    });
-    containerPort.addMouseWheelListener(new MouseWheelListener() {
-      public void mouseScrolled(MouseEvent e) {
-        int delta = (e.count + (e.count < 0 ? -2 : 2)) / 3;
-        int value = containerPort.getSelection() + delta;
-        value = Math.min(Math.max(value, containerPort.getMinimum()), containerPort.getMaximum());
-        containerPort.setSelection(value);
-      }
-    });
+    containerPort = createSpinner(group, 1, 65535);
+    tag(containerPort, "containerPort");
 
     SWTFactory.createHorizontalSpacer(group, 3);
 
     new Label(group, SWT.LEFT).setText("Timeout:");
 
-    containerTimeout = new Spinner(group, SWT.SINGLE | SWT.BORDER);
-    containerTimeout.setFont(font);
-    containerTimeout.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
-    containerTimeout.setMinimum(1);
-    containerTimeout.setMaximum(Integer.MAX_VALUE);
-    containerTimeout.setPageIncrement(10);
-    containerTimeout.addModifyListener(new ModifyListener() {
-      public void modifyText(ModifyEvent e) {
-        updateLaunchConfigurationDialog();
-      }
-    });
-    containerTimeout.addMouseWheelListener(new MouseWheelListener() {
-      public void mouseScrolled(MouseEvent e) {
-        int delta = (e.count + (e.count < 0 ? -2 : 2)) / 3;
-        int value = containerTimeout.getSelection() + delta;
-        containerTimeout.setSelection(value);
-      }
-    });
+    containerTimeout = createSpinner(group, 1, Integer.MAX_VALUE);
+    containerTimeout.setToolTipText("Seconds to wait for the container to start");
+    tag(containerTimeout, "containerTimeout");
 
     SWTFactory.createHorizontalSpacer(group, 3);
 
@@ -296,21 +238,25 @@ public class WebbyTab extends JavaLaunchTab {
     containerDisableWsSci = new Button(group, SWT.CHECK);
     containerDisableWsSci.setFont(font);
     containerDisableWsSci.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
-    containerDisableWsSci.addSelectionListener(new SelectionListener() {
+    containerDisableWsSci.setToolTipText("Skips the WebSocket initializer of Tomcat/TomEE to speed up the startup");
+    containerDisableWsSci.addSelectionListener(
+        SelectionListener.widgetSelectedAdapter(e -> updateLaunchConfigurationDialog()));
+    tag(containerDisableWsSci, "containerDisableWsSci");
+  }
 
-      @Override
-      public void widgetSelected(SelectionEvent e) {
-        updateLaunchConfigurationDialog();
-      }
+  private Spinner createSpinner(Composite parent, int min, int max) {
+    Spinner spinner = new Spinner(parent, SWT.SINGLE | SWT.BORDER);
+    spinner.setFont(parent.getFont());
+    spinner.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
+    spinner.setMinimum(min);
+    spinner.setMaximum(max);
+    spinner.setPageIncrement(10);
+    spinner.addModifyListener(e -> updateLaunchConfigurationDialog());
+    return spinner;
+  }
 
-      @Override
-      public void widgetDefaultSelected(SelectionEvent e) {
-        updateLaunchConfigurationDialog();
-
-      }
-    });
-
-    return;
+  private static void tag(Widget widget, String id) {
+    widget.setData(WIDGET_ID_KEY, "webby." + id);
   }
 
   private void updateContainerTypes() {
@@ -325,24 +271,27 @@ public class WebbyTab extends JavaLaunchTab {
         }
       }
     }
-    if (containerType.getSelectionIndex() < 0) {
+    if (containerType.getSelectionIndex() < 0 && containerType.getItemCount() > 0) {
       containerType.select(0);
     }
     updateContainerHome();
   }
 
   private void updateContainerHome() {
-    String type = containerType.getText();
-    boolean homeEnabled = ContainerType.INSTALLED.getType().equals(type);
+    boolean homeEnabled = ContainerType.INSTALLED.getType().equals(containerType.getText());
     containerHome.setEnabled(homeEnabled);
     containerHomeBrowse.setEnabled(homeEnabled);
     containerHomeVariables.setEnabled(homeEnabled);
-    containerDisableWsSci.setEnabled(homeEnabled);
+    containerDisableWsSci.setEnabled(homeEnabled && isCatalina(containerId.getText()));
+  }
+
+  static boolean isCatalina(String containerId) {
+    return containerId.startsWith("tomcat") || containerId.startsWith("tomee");
   }
 
   private IJavaProject chooseJavaProject() {
-    ILabelProvider labelProvider = new JavaElementLabelProvider(JavaElementLabelProvider.SHOW_DEFAULT);
-    ElementListSelectionDialog dialog = new ElementListSelectionDialog(getShell(), labelProvider);
+    ElementListSelectionDialog dialog = new ElementListSelectionDialog(getShell(),
+        new JavaElementLabelProvider(JavaElementLabelProvider.SHOW_DEFAULT));
     dialog.setTitle(LauncherMessages.AbstractJavaMainTab_4);
     dialog.setMessage(LauncherMessages.AbstractJavaMainTab_3);
     try {
@@ -352,7 +301,7 @@ public class WebbyTab extends JavaLaunchTab {
     }
     IJavaProject javaProject = getJavaProject();
     if (javaProject != null) {
-      dialog.setInitialSelections(new Object[] { javaProject });
+      dialog.setInitialSelections(javaProject);
     }
     if (dialog.open() == Window.OK) {
       return (IJavaProject) dialog.getFirstResult();
@@ -361,18 +310,14 @@ public class WebbyTab extends JavaLaunchTab {
   }
 
   private IJavaProject getJavaProject() {
-    String projectName = this.projectName.getText().trim();
-    if (projectName.length() <= 0) {
+    String name = projectName.getText().trim();
+    if (name.isEmpty()) {
       return null;
     }
-    return getJavaModel().getJavaProject(projectName);
+    return JavaCore.create(getWorkspaceRoot()).getJavaProject(name);
   }
 
-  private IJavaModel getJavaModel() {
-    return JavaCore.create(getWorkspaceRoot());
-  }
-
-  private IWorkspaceRoot getWorkspaceRoot() {
+  private static IWorkspaceRoot getWorkspaceRoot() {
     return ResourcesPlugin.getWorkspace().getRoot();
   }
 
@@ -384,6 +329,7 @@ public class WebbyTab extends JavaLaunchTab {
     return dialog.open();
   }
 
+  @Override
   public void setDefaults(ILaunchConfigurationWorkingCopy config) {
     IJavaElement javaElement = getContext();
     if (javaElement != null) {
@@ -392,114 +338,125 @@ public class WebbyTab extends JavaLaunchTab {
       config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, "");
     }
     config.setAttribute(WebbyLaunchConstants.ATTR_CONTEXT_NAME, "");
-    config.setAttribute(WebbyLaunchConstants.ATTR_CONTAINER_ID, "tomcat10x");
+    config.setAttribute(WebbyLaunchConstants.ATTR_CONTAINER_ID, WebbyLaunchConstants.DEFAULT_CONTAINER_ID);
     config.setAttribute(WebbyLaunchConstants.ATTR_CONTAINER_HOME, "");
-    config.setAttribute(WebbyLaunchConstants.ATTR_LOG_LEVEL, "medium");
+    config.setAttribute(WebbyLaunchConstants.ATTR_LOG_LEVEL, WebbyLaunchConstants.DEFAULT_LOG_LEVEL);
   }
 
   @Override
   public void initializeFrom(ILaunchConfiguration config) {
-    String projectName = "";
-    try {
-      projectName = config.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, "");
-    } catch (CoreException ce) {
-      setErrorMessage(ce.getStatus().getMessage());
-    }
-    this.projectName.setText(projectName);
+    projectName.setText(getAttribute(config, IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, ""));
+    contextName.setText(getAttribute(config, WebbyLaunchConstants.ATTR_CONTEXT_NAME, ""));
 
-    String contextName = "";
-    try {
-      contextName = config.getAttribute(WebbyLaunchConstants.ATTR_CONTEXT_NAME, "");
-    } catch (CoreException ce) {
-      setErrorMessage(ce.getStatus().getMessage());
-    }
-    this.contextName.setText(contextName);
-
-    String containerId = "";
-    try {
-      containerId = config.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_ID, "");
-    } catch (CoreException ce) {
-      setErrorMessage(ce.getStatus().getMessage());
-    }
-    select(this.containerId, containerId, "jetty7x");
+    select(containerId, getAttribute(config, WebbyLaunchConstants.ATTR_CONTAINER_ID, ""),
+        WebbyLaunchConstants.DEFAULT_CONTAINER_ID);
     updateContainerTypes();
 
-    String containerHome = "";
-    try {
-      containerHome = config.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_HOME, "");
-    } catch (CoreException ce) {
-      setErrorMessage(ce.getStatus().getMessage());
-    }
-    this.containerHome.setText(containerHome);
+    containerHome.setText(getAttribute(config, WebbyLaunchConstants.ATTR_CONTAINER_HOME, ""));
+    select(containerLogging, getAttribute(config, WebbyLaunchConstants.ATTR_LOG_LEVEL, ""),
+        WebbyLaunchConstants.DEFAULT_LOG_LEVEL);
 
-    String logLevel = "";
-    try {
-      logLevel = config.getAttribute(WebbyLaunchConstants.ATTR_LOG_LEVEL, "");
-    } catch (CoreException ce) {
-      setErrorMessage(ce.getStatus().getMessage());
-    }
-    select(this.containerLogging, logLevel, "medium");
+    containerPort.setSelection(getIntAttribute(config, WebbyLaunchConstants.ATTR_CONTAINER_PORT,
+        WebbyLaunchConstants.DEFAULT_PORT));
+    containerTimeout.setSelection(getIntAttribute(config, WebbyLaunchConstants.ATTR_CONTAINER_TIMEOUT,
+        WebbyLaunchConstants.DEFAULT_TIMEOUT));
 
-    int containerPort = 8080;
-    try {
-      containerPort = config.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_PORT, 8080);
-    } catch (CoreException ce) {
-      try {
-        containerPort = Integer.parseInt(config.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_PORT, "8080"));
-      } catch (CoreException nce) {
-        setErrorMessage(ce.getStatus().getMessage());
-      } catch (NumberFormatException e) {
-        // just stick to the default value
-      }
-    }
-    this.containerPort.setSelection(containerPort);
-
-    int containerTimeout = 60;
-    try {
-      containerTimeout = config.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_TIMEOUT, 60);
-    } catch (CoreException ce) {
-      try {
-        containerTimeout = Integer.parseInt(config.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_TIMEOUT, "60"));
-      } catch (CoreException nce) {
-        setErrorMessage(ce.getStatus().getMessage());
-      } catch (NumberFormatException e) {
-        // just stick to the default value
-      }
-    }
-    this.containerTimeout.setSelection(containerTimeout);
-
-    boolean disableWsSci = true;
-    try {
-      disableWsSci = config.getAttribute(WebbyLaunchConstants.ATTR_CONTAINER_DISABLE_WS_SCI, true);
-    } catch (CoreException ce) {
-      setErrorMessage(ce.getStatus().getMessage());
-    }
-    this.containerDisableWsSci.setSelection(disableWsSci);
-
-    boolean openWhenStarted = true;
-    try {
-      openWhenStarted = config.getAttribute(WebbyLaunchConstants.ATTR_OPEN_WHEN_STARTED, true);
-    } catch (CoreException ce) {
-      setErrorMessage(ce.getStatus().getMessage());
-    }
-    this.openWhenStarted.setSelection(openWhenStarted);
+    containerDisableWsSci.setSelection(getAttribute(config, WebbyLaunchConstants.ATTR_CONTAINER_DISABLE_WS_SCI,
+        WebbyLaunchConstants.DEFAULT_DISABLE_WS_SCI));
+    openWhenStarted.setSelection(getAttribute(config, WebbyLaunchConstants.ATTR_OPEN_WHEN_STARTED,
+        WebbyLaunchConstants.DEFAULT_OPEN_WHEN_STARTED));
 
     super.initializeFrom(config);
   }
 
-  private void select(Combo combo, String value, String fallback) {
+  private String getAttribute(ILaunchConfiguration config, String name, String defaultValue) {
+    try {
+      return config.getAttribute(name, defaultValue);
+    } catch (CoreException e) {
+      setErrorMessage(e.getStatus().getMessage());
+      return defaultValue;
+    }
+  }
+
+  private boolean getAttribute(ILaunchConfiguration config, String name, boolean defaultValue) {
+    try {
+      return config.getAttribute(name, defaultValue);
+    } catch (CoreException e) {
+      setErrorMessage(e.getStatus().getMessage());
+      return defaultValue;
+    }
+  }
+
+  private int getIntAttribute(ILaunchConfiguration config, String name, int defaultValue) {
+    try {
+      // older versions stored some numbers as strings
+      Object value = config.getAttributes().get(name);
+      if (value instanceof Integer intValue) {
+        return intValue;
+      }
+      if (value instanceof String strValue) {
+        return Integer.parseInt(strValue.trim());
+      }
+    } catch (CoreException e) {
+      setErrorMessage(e.getStatus().getMessage());
+    } catch (NumberFormatException e) {
+      // just stick to the default value
+    }
+    return defaultValue;
+  }
+
+  private static void select(Combo combo, String value, String fallback) {
     int index = combo.indexOf(value);
     if (index < 0 && fallback != null) {
       index = combo.indexOf(fallback);
+    }
+    if (index < 0 && combo.getItemCount() > 0) {
+      index = combo.getItemCount() - 1;
     }
     if (index >= 0) {
       combo.select(index);
     }
   }
 
+  @Override
+  public boolean isValid(ILaunchConfiguration config) {
+    setErrorMessage(null);
+    setMessage(null);
+
+    String name = projectName.getText().trim();
+    if (name.isEmpty()) {
+      setErrorMessage("No project specified");
+      return false;
+    }
+    IStatus status = ResourcesPlugin.getWorkspace().validateName(name, IResource.PROJECT);
+    if (!status.isOK()) {
+      setErrorMessage("Invalid project name: " + status.getMessage());
+      return false;
+    }
+    IProject project = getWorkspaceRoot().getProject(name);
+    if (!project.exists()) {
+      setErrorMessage("Project " + name + " does not exist");
+      return false;
+    }
+    if (!project.isOpen()) {
+      setErrorMessage("Project " + name + " is closed");
+      return false;
+    }
+    if (containerId.getSelectionIndex() < 0) {
+      setErrorMessage("No container provider selected");
+      return false;
+    }
+    if (containerHome.isEnabled() && containerHome.getText().isBlank()) {
+      setErrorMessage("No container home directory specified");
+      return false;
+    }
+    return true;
+  }
+
+  @Override
   public void performApply(ILaunchConfigurationWorkingCopy config) {
-    String projectName = this.projectName.getText().trim();
-    config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, projectName);
+    String name = projectName.getText().trim();
+    config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, name);
     config.setAttribute(WebbyLaunchConstants.ATTR_CONTEXT_NAME, contextName.getText().trim());
     config.setAttribute(WebbyLaunchConstants.ATTR_OPEN_WHEN_STARTED, openWhenStarted.getSelection());
     config.setAttribute(WebbyLaunchConstants.ATTR_CONTAINER_ID, containerId.getText().trim());
@@ -509,21 +466,19 @@ public class WebbyTab extends JavaLaunchTab {
     config.setAttribute(WebbyLaunchConstants.ATTR_CONTAINER_TIMEOUT, containerTimeout.getSelection());
     config.setAttribute(WebbyLaunchConstants.ATTR_CONTAINER_DISABLE_WS_SCI, containerDisableWsSci.getSelection());
 
-    IProject project = null;
-    if (projectName.length() > 0) {
-      project = ResourcesPlugin.getWorkspace().getRoot().getProject(projectName);
-    }
-    if (project != null) {
-      config.setMappedResources(new IResource[] { project });
+    if (!name.isEmpty() && ResourcesPlugin.getWorkspace().validateName(name, IResource.PROJECT).isOK()) {
+      config.setMappedResources(new IResource[] { getWorkspaceRoot().getProject(name) });
     } else {
       config.setMappedResources(null);
     }
   }
 
+  @Override
   public String getName() {
     return LauncherMessages.JavaMainTab__Main_19;
   }
 
+  @Override
   public Image getImage() {
     return WebbyImages.LAUNCH_CONFIG;
   }

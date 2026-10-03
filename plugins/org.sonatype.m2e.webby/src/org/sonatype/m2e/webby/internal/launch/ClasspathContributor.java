@@ -1,6 +1,7 @@
 package org.sonatype.m2e.webby.internal.launch;
 
-import org.eclipse.core.runtime.*;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
 
 public abstract class ClasspathContributor {
 

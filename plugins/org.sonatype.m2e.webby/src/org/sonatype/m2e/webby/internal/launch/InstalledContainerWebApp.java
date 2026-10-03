@@ -18,22 +18,27 @@ public class InstalledContainerWebApp implements IWebApp {
     this.container = container;
   }
 
+  @Override
   public ILaunch getLaunch() {
     return launch;
   }
 
+  @Override
   public String getContext() {
     return cargoConfig.getContextName();
   }
 
+  @Override
   public String getPort() {
     return cargoConfig.getPort();
   }
 
+  @Override
   public String getContainerId() {
     return cargoConfig.getContainerId();
   }
 
+  @Override
   public void stop() {
     container.stop();
   }

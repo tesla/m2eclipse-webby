@@ -1,12 +1,18 @@
 package org.sonatype.m2e.webby.internal.util;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.codehaus.plexus.util.DirectoryScanner;
-import org.eclipse.core.resources.*;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.runtime.CoreException;
 
+/**
+ * Collects the files selected by include/exclude patterns, either from a directory or from a resource delta.
+ */
 public class PathCollector {
 
   private final DirectoryScannerEx scanner;
@@ -14,12 +20,12 @@ public class PathCollector {
   public PathCollector(List<String> includes, List<String> excludes) {
     scanner = new DirectoryScannerEx();
     if (includes != null && !includes.isEmpty()) {
-      scanner.setIncludes(includes.toArray(new String[includes.size()]));
+      scanner.setIncludes(includes.toArray(String[]::new));
     } else {
       scanner.setIncludes(new String[] { "**" });
     }
     if (excludes != null) {
-      scanner.setExcludes(excludes.toArray(new String[excludes.size()]));
+      scanner.setExcludes(excludes.toArray(String[]::new));
     } else {
       scanner.setExcludes(new String[0]);
     }
@@ -44,6 +50,9 @@ public class PathCollector {
     return files;
   }
 
+  /**
+   * @return the selected files that were added or changed (first array) and removed (second array)
+   */
   public String[][] collectFiles(IResourceDelta resDelta) {
     if (resDelta == null) {
       return new String[2][0];
@@ -77,8 +86,8 @@ public class PathCollector {
     }
 
     String[][] results = new String[2][];
-    results[0] = included.toArray(new String[included.size()]);
-    results[1] = deleted.toArray(new String[deleted.size()]);
+    results[0] = included.toArray(String[]::new);
+    results[1] = deleted.toArray(String[]::new);
     return results;
   }
 
@@ -88,6 +97,7 @@ public class PathCollector {
         + Arrays.asList(scanner.getExcludes());
   }
 
+  /** Exposes the pattern matching of the scanner to match the paths of a resource delta. */
   static class DirectoryScannerEx extends DirectoryScanner {
 
     public String[] getIncludes() {

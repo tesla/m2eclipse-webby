@@ -1,32 +1,46 @@
 package org.sonatype.m2e.webby.internal;
 
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.eclipse.debug.core.*;
+import org.eclipse.debug.core.DebugPlugin;
+import org.eclipse.debug.core.ILaunch;
+import org.eclipse.debug.core.ILaunchManager;
+import org.eclipse.debug.core.ILaunchesListener2;
 
+/**
+ * Keeps track of the web applications started by Webby, until their launch terminates.
+ */
 public class WebAppRegistry {
 
-  private final Map<IWebApp, Object> webApps = new ConcurrentHashMap<IWebApp, Object>();
+  private final Set<IWebApp> webApps = ConcurrentHashMap.newKeySet();
 
-  private final Collection<IWebAppListener> listeners = new CopyOnWriteArrayList<IWebAppListener>();
+  private final Collection<IWebAppListener> listeners = new CopyOnWriteArrayList<>();
 
-  private final WebAppLaunchListener listener;
+  private final ILaunchManager launchManager;
+
+  private final WebAppLaunchListener launchListener = new WebAppLaunchListener();
 
   public WebAppRegistry() {
-    listener = new WebAppLaunchListener();
-    DebugPlugin.getDefault().getLaunchManager().addLaunchListener(listener);
+    this(DebugPlugin.getDefault().getLaunchManager());
+  }
+
+  WebAppRegistry(ILaunchManager launchManager) {
+    this.launchManager = launchManager;
+    launchManager.addLaunchListener(launchListener);
   }
 
   public void dispose() {
-    DebugPlugin.getDefault().getLaunchManager().removeLaunchListener(listener);
+    launchManager.removeLaunchListener(launchListener);
   }
 
   public void addListener(IWebAppListener listener) {
-    if (listener == null) {
-      return;
+    if (listener != null) {
+      listeners.add(listener);
     }
-    listeners.add(listener);
   }
 
   public void removeListener(IWebAppListener listener) {
@@ -34,10 +48,9 @@ public class WebAppRegistry {
   }
 
   public void addWebApp(IWebApp webApp) {
-    if (webApp == null) {
+    if (webApp == null || !webApps.add(webApp)) {
       return;
     }
-    webApps.put(webApp, Boolean.TRUE);
     for (IWebAppListener listener : listeners) {
       try {
         listener.webAppStarted(webApp);
@@ -48,11 +61,9 @@ public class WebAppRegistry {
   }
 
   public void removeWebApp(IWebApp webApp) {
-    if (webApp == null) {
+    if (webApp == null || !webApps.remove(webApp)) {
       return;
     }
-    webApps.remove(webApp);
-
     for (IWebAppListener listener : listeners) {
       try {
         listener.webAppStopped(webApp);
@@ -63,30 +74,37 @@ public class WebAppRegistry {
   }
 
   public Collection<IWebApp> getWebApps() {
-    return Collections.unmodifiableCollection(webApps.keySet());
+    return Collections.unmodifiableCollection(webApps);
   }
 
-  class WebAppLaunchListener implements ILaunchesListener2 {
-
-    public void launchesTerminated(ILaunch[] launches) {
-      for (ILaunch launch : launches) {
-        for (IWebApp webApp : webApps.keySet()) {
-          if (webApp.getLaunch() == launch) {
-            removeWebApp(webApp);
-            break;
-          }
+  void launchesTerminated(ILaunch[] launches) {
+    for (ILaunch launch : launches) {
+      for (IWebApp webApp : webApps) {
+        if (webApp.getLaunch() == launch) {
+          removeWebApp(webApp);
         }
       }
     }
+  }
 
-    public void launchesRemoved(ILaunch[] launches) {
-      launchesTerminated(launches);
+  private class WebAppLaunchListener implements ILaunchesListener2 {
+
+    @Override
+    public void launchesTerminated(ILaunch[] launches) {
+      WebAppRegistry.this.launchesTerminated(launches);
     }
 
+    @Override
+    public void launchesRemoved(ILaunch[] launches) {
+      WebAppRegistry.this.launchesTerminated(launches);
+    }
+
+    @Override
     public void launchesAdded(ILaunch[] launches) {
       // irrelevant
     }
 
+    @Override
     public void launchesChanged(ILaunch[] launches) {
       // irrelevant
     }

@@ -1,28 +1,46 @@
 package org.sonatype.m2e.webby.internal.launch;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
-import org.eclipse.core.resources.*;
-import org.eclipse.core.runtime.*;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.debug.core.ILaunchConfiguration;
-import org.eclipse.jdt.core.*;
-import org.eclipse.jdt.launching.*;
-import org.eclipse.m2e.jdt.*;
+import org.eclipse.jdt.core.IClasspathEntry;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants;
+import org.eclipse.jdt.launching.IRuntimeClasspathEntry;
+import org.eclipse.jdt.launching.JavaRuntime;
+import org.eclipse.jdt.launching.StandardSourcePathProvider;
+import org.eclipse.m2e.jdt.IClasspathManager;
+import org.eclipse.m2e.jdt.MavenJdtPlugin;
 import org.eclipse.m2e.jdt.internal.MavenClasspathHelpers;
 
+/**
+ * Source lookup for Webby launches: the project itself plus its Maven dependencies, including the ones that are
+ * workspace projects.
+ */
 @SuppressWarnings("restriction")
 public class WebbySourcePathProvider extends StandardSourcePathProvider {
 
+  @Override
   public IRuntimeClasspathEntry[] computeUnresolvedClasspath(ILaunchConfiguration configuration) throws CoreException {
     boolean useDefault = configuration.getAttribute(IJavaLaunchConfigurationConstants.ATTR_DEFAULT_SOURCE_PATH, true);
-    IRuntimeClasspathEntry[] entries = null;
+    IRuntimeClasspathEntry[] entries;
     if (useDefault) {
       IJavaProject javaProject = JavaRuntime.getJavaProject(configuration);
 
       IRuntimeClasspathEntry jreEntry = JavaRuntime.computeJREEntry(configuration);
       IRuntimeClasspathEntry projectEntry = JavaRuntime.newProjectRuntimeClasspathEntry(javaProject);
-      IRuntimeClasspathEntry mavenEntry = JavaRuntime.newRuntimeContainerClasspathEntry(new Path(
-          IClasspathManager.CONTAINER_ID), IRuntimeClasspathEntry.USER_CLASSES);
+      IRuntimeClasspathEntry mavenEntry = JavaRuntime.newRuntimeContainerClasspathEntry(
+          IPath.fromPortableString(IClasspathManager.CONTAINER_ID), IRuntimeClasspathEntry.USER_CLASSES);
 
       if (jreEntry == null) {
         entries = new IRuntimeClasspathEntry[] { projectEntry, mavenEntry };
@@ -35,11 +53,12 @@ public class WebbySourcePathProvider extends StandardSourcePathProvider {
     return entries;
   }
 
+  @Override
   public IRuntimeClasspathEntry[] resolveClasspath(IRuntimeClasspathEntry[] entries, ILaunchConfiguration configuration)
       throws CoreException {
     IProgressMonitor monitor = new NullProgressMonitor();
     int scope = IClasspathManager.CLASSPATH_RUNTIME;
-    Set<IRuntimeClasspathEntry> all = new LinkedHashSet<IRuntimeClasspathEntry>(entries.length);
+    Set<IRuntimeClasspathEntry> all = new LinkedHashSet<>(entries.length);
     for (IRuntimeClasspathEntry entry : entries) {
       if (entry.getType() == IRuntimeClasspathEntry.CONTAINER
           && MavenClasspathHelpers.isMaven2ClasspathContainer(entry.getPath())) {
@@ -55,7 +74,7 @@ public class WebbySourcePathProvider extends StandardSourcePathProvider {
         addStandardClasspathEntries(all, entry, configuration);
       }
     }
-    return all.toArray(new IRuntimeClasspathEntry[all.size()]);
+    return all.toArray(IRuntimeClasspathEntry[]::new);
   }
 
   private void addStandardClasspathEntries(Set<IRuntimeClasspathEntry> all, IRuntimeClasspathEntry entry,
@@ -78,6 +97,8 @@ public class WebbySourcePathProvider extends StandardSourcePathProvider {
           break;
         case IClasspathEntry.CPE_LIBRARY:
           resolved.add(JavaRuntime.newArchiveRuntimeClasspathEntry(entry.getPath()));
+          break;
+        default:
           break;
       }
     }

@@ -6,6 +6,9 @@ public interface IWebApp {
 
   ILaunch getLaunch();
 
+  /**
+   * @return the context path, without leading slash
+   */
   String getContext();
 
   String getPort();
@@ -13,5 +16,15 @@ public interface IWebApp {
   String getContainerId();
 
   void stop() throws Exception;
+
+  default String getUrl() {
+    String context = getContext();
+    if (context == null) {
+      context = "";
+    } else if (context.startsWith("/")) {
+      context = context.substring(1);
+    }
+    return "http://localhost:" + getPort() + "/" + context;
+  }
 
 }

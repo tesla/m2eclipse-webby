@@ -1,17 +1,25 @@
 package org.sonatype.m2e.webby.internal.build;
 
-import java.io.*;
-import java.util.zip.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.sonatype.m2e.webby.internal.config.OverlayConfiguration;
-import org.sonatype.m2e.webby.internal.util.*;
+import org.sonatype.m2e.webby.internal.util.PathCollector;
+import org.sonatype.m2e.webby.internal.util.PathSelector;
 
+/**
+ * Contributes the resources of an overlay that is not open in the workspace, from its WAR file or directory.
+ */
 public class ArtifactResourceContributor extends ResourceContributor {
 
-  private File path;
+  private final File path;
 
-  private OverlayConfiguration overlayConfig;
+  private final OverlayConfiguration overlayConfig;
 
   public ArtifactResourceContributor(int ordinal, File path, OverlayConfiguration overlayConfig) {
     super(ordinal);
@@ -19,6 +27,7 @@ public class ArtifactResourceContributor extends ResourceContributor {
     this.overlayConfig = overlayConfig;
   }
 
+  @Override
   public void contribute(WarAssembler assembler, IProgressMonitor monitor) {
     try {
       if (path.isDirectory()) {
@@ -41,26 +50,26 @@ public class ArtifactResourceContributor extends ResourceContributor {
 
     long lastModified = path.lastModified();
 
-    try {
-      ZipInputStream zis = new ZipInputStream(new FileInputStream(path));
+    try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(path.toPath()))) {
       InputStream ncis = new NonClosingInputStream(zis);
-      try {
-        for (ZipEntry ze = zis.getNextEntry(); ze != null; ze = zis.getNextEntry()) {
-          String path = ze.getName();
-          if (ze.isDirectory() || !pathSelector.isSelected(path)) {
-            continue;
-          }
-          String targetPath = overlayConfig.getTargetPath(path);
-          if (assembler.registerTargetPath(targetPath, ordinal)) {
-            try {
-              assembler.copyResourceFile(ncis, targetPath, filtering, encoding, lastModified);
-            } catch (IOException e) {
-              assembler.addError(this.path.getAbsolutePath() + "!/" + path, targetPath, e);
-            }
+      for (ZipEntry ze = zis.getNextEntry(); ze != null; ze = zis.getNextEntry()) {
+        String entryName = ze.getName();
+        if (ze.isDirectory() || !pathSelector.isSelected(entryName)) {
+          continue;
+        }
+        String targetPath = overlayConfig.getTargetPath(entryName);
+        if (!WarAssembler.isSafeTargetPath(targetPath)) {
+          assembler.addError(path.getAbsolutePath() + "!/" + entryName, null,
+              new IOException("Entry would be extracted outside of the WAR directory"));
+          continue;
+        }
+        if (assembler.registerTargetPath(targetPath, ordinal)) {
+          try {
+            assembler.copyResourceFile(ncis, targetPath, filtering, encoding, lastModified);
+          } catch (IOException e) {
+            assembler.addError(path.getAbsolutePath() + "!/" + entryName, targetPath, e);
           }
         }
-      } finally {
-        zis.close();
       }
     } catch (IOException e) {
       assembler.addError(this.path.getAbsolutePath(), null, e);
@@ -82,13 +91,8 @@ public class ArtifactResourceContributor extends ResourceContributor {
         continue;
       }
       File sourceFile = new File(path, file);
-      try {
-        InputStream is = new FileInputStream(sourceFile);
-        try {
-          assembler.copyResourceFile(is, targetPath, filtering, encoding, sourceFile.lastModified());
-        } finally {
-          is.close();
-        }
+      try (InputStream is = Files.newInputStream(sourceFile.toPath())) {
+        assembler.copyResourceFile(is, targetPath, filtering, encoding, sourceFile.lastModified());
       } catch (IOException e) {
         assembler.addError(sourceFile.getAbsolutePath(), targetPath, e);
       }
