@@ -1,33 +1,89 @@
-# Webby: A Web Application Runner for Maven WAR Projects powered by [Cargo](https://codehaus-cargo.github.io/cargo/Home.html).
+# Webby: a Web Application Runner for Maven WAR Projects
 
-To ease running and debugging of web applications created by the Maven WAR Plugin, a feature named "Web Application Launcher" (nickname "Webby") can be installed from the update site (https://github.com/tesla/m2eclipse-webby/releases/download/latest/). Once installed, the feature provides a new launch configuration type to run or debug a Maven WAR project in a servlet container. The Run Jetty Run plugin for Eclipse served as inspiration for Webby.
+[![build](https://github.com/tesla/m2eclipse-webby/actions/workflows/build.yml/badge.svg)](https://github.com/tesla/m2eclipse-webby/actions/workflows/build.yml)
+[![codecov](https://codecov.io/gh/tesla/m2eclipse-webby/graph/badge.svg)](https://codecov.io/gh/tesla/m2eclipse-webby)
+[![License: EPL 2.0](https://img.shields.io/badge/License-EPL%202.0-blue.svg)](https://www.eclipse.org/legal/epl-v20.html)
 
-Warning: Webby cannot be installed side-by-side with the m2e-wtp extension. Trying to do so will render one or both of the extensions unusable.
+Webby is an Eclipse plugin, built on [m2e](https://eclipse.dev/m2e/) and powered by
+[Cargo](https://codehaus-cargo.github.io/cargo/Home.html), that runs and debugs Maven WAR projects in a servlet
+container **without packaging the WAR file**. It provides a new launch configuration type, "Webby", that starts a
+locally installed container on the exploded WAR assembled incrementally by Webby while you work in the IDE.
+
+The primary focus of Webby is to allow running WAR projects without the time consumption of creating the actual WAR
+file, yet supporting advanced features of the `maven-war-plugin` like resource filtering and overlays. Launched in
+debug mode, the application benefits from Eclipse hot code replace: many changes to Java sources (servlets, …) are
+applied on the fly without restarting the container.
+
+> **Warning:** Webby cannot be installed side-by-side with the m2e-wtp extension. Trying to do so will render one or
+> both of the extensions unusable.
 
 ![webby-launch-config](readme/Webby.png)
 
-The primary focus of Webby is to allow running WAR projects without the time consumption of creating the actual WAR file, yet supporting advanced features like resource filtering and overlays while the developer makes incremental changes to the project within the IDE.
+## Installation
 
-Right now, Webby supports running applications in Jetty 6.x/7.x/8.x, TomEE 1.x and Apache Tomcat 5.x/6.x/7.x/8.x/9x/10x. The developer selects the container by pointing the launch configuration at a local directory where the container has been previously installed. In the case of Jetty, the developer can also choose to use embedded Jetty distributions that are included in Webby itself, assuming the corresponding add-on features for Webby were installed. In general, the launch configuration dialog should be rather self-explanatory. The "System Properties Files" field in the "JRE" tab might deserve some details though. Each line of this multi-line text field gives the path to a properties file, empty/blank lines are ignored. The properties files are read in declared order and merged, with latter files taking precedence in case of conflicts. The resulting set of properties is added to the system properties of the launched JVM.
+Install the "Web Application Launcher for M2Eclipse" feature from the update site:
 
-Given the similarity with the jetty:run goal that developers often use on the commandline to debug their application, Webby allows to initialize a launch configuration from the configuration of the jetty-maven-plugin or maven-jetty-plugin, respectively. So when you already use jetty:run in your POM and now want to try Webby, open the context menu for the WAR project in Eclipse and choose the command "Debug as Webby" from the "Debug As" sub menu. The resulting launch configuration will pick an embedded Jetty container according to the plugin version and apply the port, context path and system properties configured for Jetty.
+* latest release: `https://github.com/tesla/m2eclipse-webby/releases/latest/download/`
+* a specific release: `https://github.com/tesla/m2eclipse-webby/releases/download/$VERSION/`
+* development build of `master`: `https://github.com/tesla/m2eclipse-webby/releases/download/latest/`
 
-Once a WAR project has been launched by Webby, it will be listed in Webby's "Web Apps" view. You can open this view via the menu command "Window" > "Show View" > "Other...". This view simply allows one to open the web application in a browser and to stop it. For simple applications that don't require an orderly shutdown, you could also stop the application by terminating the JVM running it, e.g. via the "Terminate" button in the console view created for the web application.
+Requirements: Eclipse 2023-12 (4.30) or newer with m2e 2.x, running on Java 21 or newer.
+
+## Supported containers
+
+Webby relies on Cargo 1.10.29 and supports the following containers, installed in a local directory:
+
+| Family    | Cargo ids                                                       |
+|-----------|-----------------------------------------------------------------|
+| Tomcat    | `tomcat8x`, `tomcat9x`, `tomcat10x`, `tomcat11x` (default)      |
+| TomEE     | `tomee8x`, `tomee9x`, `tomee10x`                                |
+| Jetty     | `jetty9x`, `jetty10x`, `jetty11x`, `jetty12x`                   |
+| GlassFish | `glassfish5x`, `glassfish6x`, `glassfish7x`, `glassfish8x`      |
+
+Tomcat 10.1, Tomcat 11 and Jetty 12 are exercised by the integration tests of every build.
+
+## Usage
+
+Right-click a Maven project with `war` packaging and choose **Run As > Run as Webby** or **Debug As > Debug as
+Webby**, or create a "Webby" configuration in **Run > Run Configurations...**. The main tab lets you choose:
+
+* the project and the context path (the artifact id by default),
+* the container (provider) and its home directory, which may contain variables like `${env_var:TOMCAT_HOME}`,
+* the HTTP port; the two following ports are used for AJP and RMI,
+* the startup timeout, in seconds,
+* the Cargo log level,
+* "Disable WsSci" to skip the WebSocket initializer of Tomcat/TomEE, which speeds up the startup,
+* whether to open the application in a browser once started.
+
+The "JRE" tab additionally holds the VM arguments and the **System Properties Files**: each line gives the path to a
+properties file, blank lines are ignored. The files are read in declared order and merged, latter files taking
+precedence. The resulting properties are passed as system properties to the container JVM.
+
+Once launched, the application is listed in the **Web Apps** view (**Window > Show View > Other... > Webby**), which
+lets you open it in a browser (hold Ctrl/Cmd for the external browser), restart or stop it. Applications that do not
+need an orderly shutdown can also be stopped by terminating their launch in the Console or Debug view.
 
 ![webby-view](readme/Webby2.png)
 
-You will get the most out of Webby when you launch your web applications in debug mode. Debug mode enables Eclipse's hot code replace feature that allows to incorporate many changes to Java sources like servlets on the fly into the running web application without restarting it.
+## Building
 
-# Update Site
+The build requires Java 21; Maven is provided by the wrapper:
 
-You can find the latest build of Webby here:
+```shell
+./mvnw clean verify
+```
 
-https://github.com/tesla/m2eclipse-webby/releases/download/latest/
+The update site is created in `sites/org.sonatype.m2e.webby.repository/target/repository`. The build runs:
 
-or any specific version here:
+* unit tests and SWTBot UI tests in an Eclipse workbench (use `xvfb-run ./mvnw clean verify` on a headless Linux),
+* integration tests that import a sample WAR project into the workspace and run it in Tomcat 10.1, Tomcat 11 and
+  Jetty 12, downloaded from Maven Central,
+* a JaCoCo coverage report, in `releng/coverage/target/site/jacoco-aggregate`, which CI uploads to Codecov.
 
-https://github.com/tesla/m2eclipse-webby/releases/download/$VERSION/ (with $VERSION corresponding to a Release)
+Use `-DskipTests` to skip the tests. The target platform (Eclipse 2026-09, m2e and SWTBot) is defined in
+`releng/webby.target`. To develop Webby in Eclipse, open that file and click "Set as Active Target Platform", then
+import the projects and run `./mvnw generate-resources` once to download the libraries embedded in the plugin.
 
-#License
+## License
 
-[Eclipse Public License, v2.0](http://www.eclipse.org/legal/epl-v20.html)
+[Eclipse Public License, v2.0](https://www.eclipse.org/legal/epl-v20.html)
