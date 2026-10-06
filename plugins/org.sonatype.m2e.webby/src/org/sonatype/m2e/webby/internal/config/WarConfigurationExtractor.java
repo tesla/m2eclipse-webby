@@ -17,6 +17,8 @@ import org.apache.maven.project.MavenProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.m2e.core.MavenPlugin;
+import org.eclipse.m2e.core.embedder.IMaven;
 import org.eclipse.m2e.core.project.IMavenProjectFacade;
 import org.sonatype.m2e.webby.internal.WebbyPlugin;
 import org.sonatype.m2e.webby.internal.util.PathSelector;
@@ -66,6 +68,9 @@ public class WarConfigurationExtractor {
       }
       MojoExecution mojoExec = mojoExecs.get(0);
 
+      // IMavenProjectFacade.getMojoParameterValue(MojoExecution, ...) does not exist in m2e.core 2.7
+      IMaven maven = MavenPlugin.getMaven();
+
       String basedir = mvnProject.getBasedir().getAbsolutePath();
 
       String encoding = mvnProject.getProperties().getProperty("project.build.sourceEncoding");
@@ -75,7 +80,7 @@ public class WarConfigurationExtractor {
       warConfig.setClassesDirectory(resolve(basedir, mvnProject.getBuild().getOutputDirectory()));
 
       Set<String> overlayKeys = new HashSet<>();
-      Object[] overlays = mvnFacade.getMojoParameterValue(mojoExec, "overlays", Object[].class, null);
+      Object[] overlays = maven.getMojoParameterValue(mvnProject, mojoExec, "overlays", Object[].class, null);
       boolean mainConfigured = false;
       if (overlays != null) {
         for (Object overlay : overlays) {
@@ -115,12 +120,12 @@ public class WarConfigurationExtractor {
         overlay.setEncoding(encoding);
       }
 
-      String warSrcDir = mvnFacade.getMojoParameterValue(mojoExec, "warSourceDirectory", String.class, null);
-      String warSrcInc = mvnFacade.getMojoParameterValue(mojoExec, "warSourceIncludes", String.class, null);
-      String warSrcExc = mvnFacade.getMojoParameterValue(mojoExec, "warSourceExcludes", String.class, null);
+      String warSrcDir = maven.getMojoParameterValue(mvnProject, mojoExec, "warSourceDirectory", String.class, null);
+      String warSrcInc = maven.getMojoParameterValue(mvnProject, mojoExec, "warSourceIncludes", String.class, null);
+      String warSrcExc = maven.getMojoParameterValue(mvnProject, mojoExec, "warSourceExcludes", String.class, null);
       warConfig.getResources().add(new ResourceConfiguration(warSrcDir, split(warSrcInc), split(warSrcExc)));
 
-      ResourceConfiguration[] resources = mvnFacade.getMojoParameterValue(mojoExec, "webResources",
+      ResourceConfiguration[] resources = maven.getMojoParameterValue(mvnProject, mojoExec, "webResources",
           ResourceConfiguration[].class, null);
       if (resources != null) {
         warConfig.getResources().addAll(Arrays.asList(resources));
@@ -131,40 +136,40 @@ public class WarConfigurationExtractor {
         resource.setEncoding(encoding);
       }
 
-      String filenameMapping = mvnFacade.getMojoParameterValue(mojoExec, "outputFileNameMapping",
+      String filenameMapping = maven.getMojoParameterValue(mvnProject, mojoExec, "outputFileNameMapping",
           String.class, null);
       warConfig.setFilenameMapping(filenameMapping);
 
-      String escapeString = mvnFacade.getMojoParameterValue(mojoExec, "escapeString", String.class, null);
+      String escapeString = maven.getMojoParameterValue(mvnProject, mojoExec, "escapeString", String.class, null);
       warConfig.setEscapeString(escapeString);
 
-      String webXml = mvnFacade.getMojoParameterValue(mojoExec, "webXml", String.class, null);
+      String webXml = maven.getMojoParameterValue(mvnProject, mojoExec, "webXml", String.class, null);
       warConfig.setWebXml(resolve(basedir, webXml));
 
-      Boolean webXmlFiltered = mvnFacade.getMojoParameterValue(mojoExec, "filteringDeploymentDescriptors",
+      Boolean webXmlFiltered = maven.getMojoParameterValue(mvnProject, mojoExec, "filteringDeploymentDescriptors",
           Boolean.class, null);
       warConfig.setWebXmlFiltered(Boolean.TRUE.equals(webXmlFiltered));
 
-      Boolean backslashesEscaped = mvnFacade.getMojoParameterValue(mojoExec, "escapedBackslashesInFilePath",
+      Boolean backslashesEscaped = maven.getMojoParameterValue(mvnProject, mojoExec, "escapedBackslashesInFilePath",
           Boolean.class, null);
       warConfig.setBackslashesInFilePathEscaped(Boolean.TRUE.equals(backslashesEscaped));
 
-      String[] nonFilteredFileExtensions = mvnFacade.getMojoParameterValue(mojoExec, "nonFilteredFileExtensions", String[].class, null);
+      String[] nonFilteredFileExtensions = maven.getMojoParameterValue(mvnProject, mojoExec, "nonFilteredFileExtensions", String[].class, null);
       if (nonFilteredFileExtensions != null) {
         warConfig.getNonFilteredFileExtensions().addAll(Arrays.asList(nonFilteredFileExtensions));
       }
 
-      String[] filters = mvnFacade.getMojoParameterValue(mojoExec, "filters", String[].class, null);
+      String[] filters = maven.getMojoParameterValue(mvnProject, mojoExec, "filters", String[].class, null);
       if (filters != null) {
         for (String filter : filters) {
           warConfig.getFilters().add(resolve(basedir, filter));
         }
       }
 
-      String packagingIncludes = mvnFacade.getMojoParameterValue(mojoExec, "packagingIncludes", String.class,
+      String packagingIncludes = maven.getMojoParameterValue(mvnProject, mojoExec, "packagingIncludes", String.class,
           null);
       warConfig.setPackagingIncludes(split(packagingIncludes));
-      String packagingExcludes = mvnFacade.getMojoParameterValue(mojoExec, "packagingExcludes", String.class,
+      String packagingExcludes = maven.getMojoParameterValue(mvnProject, mojoExec, "packagingExcludes", String.class,
           null);
       warConfig.setPackagingExcludes(split(packagingExcludes));
 

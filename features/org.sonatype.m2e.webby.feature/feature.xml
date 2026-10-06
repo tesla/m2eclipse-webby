@@ -23,6 +23,7 @@
       <import feature="org.eclipse.platform" version="4.30.0" match="greaterOrEqual"/>
       <import feature="org.eclipse.jdt" version="3.19.0" match="greaterOrEqual"/>
       <import feature="org.eclipse.m2e.feature" version="2.0.0" match="greaterOrEqual"/>
+      <import plugin="org.eclipse.m2e.core" version="2.6.0" match="greaterOrEqual"/>
    </requires>
 
    <plugin
