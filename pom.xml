@@ -42,7 +42,7 @@
 
     <!-- Containers the integration tests launch web applications in -->
     <tomcat11.version>11.0.26</tomcat11.version>
-    <tomcat10.version>11.0.26</tomcat10.version>
+    <tomcat10.version>10.1.60</tomcat10.version>
     <jetty12.version>12.1.13</jetty12.version>
 
     <!-- Set by jacoco:prepare-agent when the coverage profile is active -->

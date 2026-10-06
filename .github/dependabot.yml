@@ -11,6 +11,9 @@ updates:
     ignore:
       # 3.3+ needs libraries the m2e Maven runtime does not provide
       - dependency-name: "org.apache.maven.shared:maven-filtering"
+      # the tests use one Tomcat per major version (tomcat10.version, tomcat11.version)
+      - dependency-name: "org.apache.tomcat:tomcat"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: "maven"
     directories:
       - "/plugins/org.sonatype.m2e.webby"
@@ -20,6 +23,9 @@ updates:
     ignore:
       # 3.3+ needs libraries the m2e Maven runtime does not provide
       - dependency-name: "org.apache.maven.shared:maven-filtering"
+      # the tests use one Tomcat per major version (tomcat10.version, tomcat11.version)
+      - dependency-name: "org.apache.tomcat:tomcat"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
