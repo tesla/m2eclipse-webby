@@ -31,7 +31,7 @@
     <jacoco.version>0.8.16</jacoco.version>
 
     <!-- Libraries embedded in the org.sonatype.m2e.webby bundle (see plugins/org.sonatype.m2e.webby/pom.xml) -->
-    <cargo.version>1.10.29</cargo.version>
+    <cargo.version>1.10.30</cargo.version>
     <ant.version>1.10.18</ant.version>
     <commons-discovery.version>0.5</commons-discovery.version>
     <commons-logging.version>1.4.0</commons-logging.version>
